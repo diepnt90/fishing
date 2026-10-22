@@ -162,7 +162,10 @@ async function predict() {
 
   const data = api || demoScore(c, wx, moon, nowH);
   renderResult(data, c, moon);
-  renderDepth(c, wx, moon, nowH);
+  const depths = computeDepths(c, wx, moon, nowH);
+  renderDepthRows(depths);
+  const avgDepth = depths.reduce((a, r) => a + r.depth, 0) / Math.max(1, depths.length);
+  startSea(data.score, avgDepth);
   $("#ai-note-text").textContent = api && !api.demo
     ? "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế."
     : "Đang ở chế độ demo: điểm số tính bằng thuật toán thử nghiệm. Bản chính thức sẽ gửi dữ liệu này lên LLM để phân tích.";
@@ -221,7 +224,6 @@ function demoScore(c, wx, moon, nowH) {
 function renderResult(data, c, moon) {
   animateScore(data.score);
   setVerdict(data.title, data.sub, data.score);
-  startSea(data.score);
   const box = $("#chips"); box.innerHTML = "";
   (data.chips || []).forEach((ch) => {
     const d = document.createElement("div");
@@ -254,17 +256,18 @@ function depthFor(key, c, trend, nearGolden, nowH) {
   return { key, depth: d, zone, notes };
 }
 
-function renderDepth(c, wx, moon, nowH) {
-  const card = $("#depth-card");
-  card.classList.remove("hidden");
+function computeDepths(c, wx, moon, nowH) {
   const hp = wx.hourly?.pressure_msl || [];
   const trend = hp.length > 3 ? hp[hp.length - 1] - hp[hp.length - 4] : 0;
   const toH = (iso) => { const d = new Date(iso); return d.getHours() + d.getMinutes() / 60; };
   const sr = toH(wx.daily.sunrise[0]), ss = toH(wx.daily.sunset[0]);
   const nearGolden = Math.abs(nowH - sr) < 1 || Math.abs(nowH - ss) < 1;
+  return [...state.species].map((k) => depthFor(k, c, trend, nearGolden, nowH));
+}
 
-  const results = [...state.species].map((k) => depthFor(k, c, trend, nearGolden, nowH));
-
+function renderDepthRows(results) {
+  const card = $("#depth-card");
+  card.classList.remove("hidden");
   const markers = $("#depth-markers"); markers.innerHTML = "";
   const rows = $("#depth-rows"); rows.innerHTML = "";
   results.forEach((r, i) => {
@@ -298,49 +301,67 @@ function animateScore(target) {
   requestAnimationFrame(tick);
 }
 
-/* ---------- đàn cá canvas ---------- */
+/* ---------- đàn cá canvas ----------
+   Điểm cao → đông cá, bơi nhanh, sáng rực. Điểm thấp → lèo tèo vài con, bơi chậm, mờ.
+   Tầng ăn (depthAvg 0=mặt → 2=đáy) → đàn cá tụ về đúng tầng đó, di cư mượt mà. */
 function scoreColor(s) { return s >= 75 ? "#3ee6c4" : s >= 55 ? "#a3e635" : s >= 30 ? "#f5b942" : "#ff6b6b"; }
 function stopSea() { if (state.animId) cancelAnimationFrame(state.animId); state.animId = null; }
+const hash1 = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-function startSea(score) {
+function startSea(score, depthAvg = 1) {
   stopSea();
   const cv = $("#sea"), ctx = cv.getContext("2d");
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const W = cv.clientWidth, H = cv.clientHeight;
-  cv.width = W * dpr; cv.height = H * dpr; ctx.scale(dpr, dpr);
+  cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const color = scoreColor(score);
-  const n = 3 + Math.round((score / 100) * 14);
-  const speedBase = 0.4 + (score / 100) * 1.8;
+  const energy = score / 100;                       // 0..1
+  const count = 3 + Math.round(energy * 14);        // 3..17 con
+  const speedBase = 0.25 + energy * 2.2;            // càng cao bơi càng nhanh
+  const alpha = 0.5 + energy * 0.5;                 // càng thấp càng mờ
+  const bandCenter = H * (0.24 + depthAvg * 0.26);  // depth 0→0.24H (mặt), 2→0.76H (đáy)
 
-  const fishes = Array.from({ length: n }, () => ({
-    x: Math.random() * W, y: H * 0.15 + Math.random() * H * 0.75,
-    s: 8 + Math.random() * 14, v: (0.5 + Math.random()) * speedBase,
-    dir: Math.random() < 0.5 ? 1 : -1, ph: Math.random() * Math.PI * 2,
-    depth: 0.4 + Math.random() * 0.6
+  // giữ đàn cá cũ để chúng "di cư" mượt khi dự đoán lại, chỉ cập nhật tham số
+  if (!state.seaFishes) {
+    state.seaFishes = Array.from({ length: 17 }, (_, i) => ({
+      x: hash1(i * 3 + 1) * W, y: hash1(i * 7 + 2) * H,
+      spread: hash1(i * 11 + 3) - 0.5,              // -0.5..0.5, cố định mỗi con
+      s: 8 + hash1(i * 13 + 4) * 14,
+      dir: i % 2 ? 1 : -1, ph: hash1(i * 17 + 5) * Math.PI * 2,
+      depth: 0.4 + hash1(i * 19 + 6) * 0.6,
+    }));
+  }
+  const fishes = state.seaFishes;
+  fishes.forEach((f, i) => {
+    f.active = i < count;
+    f.v = (0.5 + hash1(i * 23 + 7)) * speedBase;
+  });
+
+  const bubbles = Array.from({ length: 24 }, (_, i) => ({
+    x: hash1(i * 5 + 8) * W, y: hash1(i * 9 + 9) * H,
+    r: 1 + hash1(i * 13 + 10) * 3, v: 0.3 + hash1(i * 17 + 11) * 0.8,
   }));
-  const bubbles = Array.from({ length: 24 }, () => ({
-    x: Math.random() * W, y: Math.random() * H, r: 1 + Math.random() * 3, v: 0.3 + Math.random() * 0.8
-  }));
-  const plankton = Array.from({ length: 60 }, () => ({
-    x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.6, tw: Math.random() * Math.PI * 2
+  const plankton = Array.from({ length: 60 }, (_, i) => ({
+    x: hash1(i * 7 + 12) * W, y: hash1(i * 11 + 13) * H,
+    r: hash1(i * 13 + 14) * 1.6, tw: hash1(i * 17 + 15) * Math.PI * 2,
   }));
 
   function drawFish(f, t) {
-    const wob = Math.sin(t / 300 + f.ph) * 4;
+    const lively = 0.4 + energy * 1.4;              // quẫy đuôi nhanh khi cá ăn mạnh
+    const wob = Math.sin(t / 300 + f.ph) * 4 * lively;
     ctx.save();
     ctx.translate(f.x, f.y + wob * 0.4);
     ctx.scale(f.dir * f.depth, f.depth);
-    ctx.shadowColor = color; ctx.shadowBlur = 18;
-    // thân
-    ctx.fillStyle = color; ctx.globalAlpha = 0.9;
+    ctx.shadowColor = color; ctx.shadowBlur = 8 + energy * 16;
+    ctx.fillStyle = color; ctx.globalAlpha = alpha;
     ctx.beginPath(); ctx.ellipse(0, 0, f.s, f.s * 0.42, 0, 0, Math.PI * 2); ctx.fill();
-    // đuôi
-    const flap = Math.sin(t / 130 + f.ph) * f.s * 0.35;
+    const flap = Math.sin(t / (220 - energy * 140) + f.ph) * f.s * 0.35;
     ctx.beginPath();
-    ctx.moveTo(-f.s * 0.9, 0); ctx.lineTo(-f.s * 1.5, -f.s * 0.4 + flap); ctx.lineTo(-f.s * 1.5, f.s * 0.4 + flap);
+    ctx.moveTo(-f.s * 0.9, 0);
+    ctx.lineTo(-f.s * 1.5, -f.s * 0.4 + flap);
+    ctx.lineTo(-f.s * 1.5, f.s * 0.4 + flap);
     ctx.closePath(); ctx.fill();
-    // mắt
     ctx.shadowBlur = 0; ctx.globalAlpha = 1; ctx.fillStyle = "#04121f";
     ctx.beginPath(); ctx.arc(f.s * 0.55, -f.s * 0.1, f.s * 0.11, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
@@ -348,32 +369,29 @@ function startSea(score) {
 
   function frame(t) {
     ctx.clearRect(0, 0, W, H);
-    // sinh vật phù du
     plankton.forEach((p) => {
       ctx.globalAlpha = 0.25 + 0.2 * Math.sin(t / 700 + p.tw);
       ctx.fillStyle = "#9fd8cf"; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
     });
     ctx.globalAlpha = 1;
-    // bọt khí
     ctx.strokeStyle = "rgba(159,216,207,.35)"; ctx.lineWidth = 1;
     bubbles.forEach((b) => {
       b.y -= b.v; if (b.y < -6) { b.y = H + 6; b.x = Math.random() * W; }
       ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
     });
-    // cá
     fishes.forEach((f) => {
+      if (!f.active) return;
+      const targetY = bandCenter + f.spread * H * 0.30;
       if (!reduced) {
         f.x += f.v * f.dir;
+        f.y += (targetY - f.y) * 0.03;              // di cư mượt về tầng ăn
         if (f.x > W + 40) { f.x = -40; f.dir = 1; }
         if (f.x < -40) { f.x = W + 40; f.dir = -1; }
         if (Math.random() < 0.002) f.dir *= -1;
-      }
+      } else { f.y = targetY; }
       drawFish(f, t);
     });
     if (!reduced) state.animId = requestAnimationFrame(frame);
   }
   frame(0);
-  if (reduced) { /* một khung hình tĩnh */ }
 }
-
-window.addEventListener("resize", () => { if (!$("#scene-card").classList.contains("hidden")) { /* giữ nguyên */ } });
