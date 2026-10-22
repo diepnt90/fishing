@@ -4,6 +4,18 @@
 const $ = (s) => document.querySelector(s);
 const state = { lat: null, lon: null, name: "", animId: null };
 
+/* ---------- tabs ---------- */
+document.querySelectorAll(".seg-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".seg-btn").forEach((b) => {
+      b.classList.remove("active"); b.setAttribute("aria-selected", "false");
+    });
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active"); btn.setAttribute("aria-selected", "true");
+    $("#panel-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
 /* ---------- chọn địa điểm ---------- */
 function choosePlace(lat, lon, name) {
   state.lat = lat; state.lon = lon; state.name = name;
