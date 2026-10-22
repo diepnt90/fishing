@@ -15,8 +15,9 @@
 
 ## Phạm vi
 
-Web này phục vụ câu 6 loài cá nước ngọt ao/hồ/sông Việt Nam:
-**cá chép, cá trôi, cá trắm (cỏ/đen), cá mè (hoa/trắng), cá rô phi, cá diếc.**
+Web này phục vụ câu các loài cá tầng đáy ở ao/hồ/sông Việt Nam:
+**cá chép, cá trôi, cá trắm (cỏ/đen), cá rô phi, cá diếc.**
+(Không câu cá mè — loài ăn lửng/mặt.)
 
 ## Mẹo từ cộng đồng
 
