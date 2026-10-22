@@ -49,13 +49,25 @@
 - Trưa nắng gắt: cá xuống sâu tránh nóng, kém ăn.
 - Ban đêm: nhiều loài săn mồi (cá tra, cá trê, cá lóc) ăn mạnh.
 
-## 7. Theo loại cá phổ biến ở Việt Nam (độ tin cậy: trung bình)
+## 7. Theo loài cá — CHỈ tập trung 6 loài này (độ tin cậy: trung bình)
 
-- **Cá lóc:** thích nước nông, ăn mạnh sáng sớm và chiều mát; mồi giả hiệu quả lúc trời âm u.
-- **Cá tra:** ăn mạnh về đêm, thích chỗ nước chảy nhẹ.
-- **Cá rô phi:** dễ tính nhất, ăn cả ngày khi trời ấm.
-- **Cá chép:** tinh khôn, thích yên tĩnh; câu sáng sớm, tránh ồn.
-- **Cá trê:** chuyên ăn đêm, đặc biệt sau cơn mưa.
+> Web này phục vụ câu 6 loài cá nước ngọt ao/hồ/sông: chép, trôi, trắm, mè, rô phi, diếc.
+> Không ưu tiên các loài khác (lóc, tra, trê...).
+
+- **Cá chép:** tinh khôn, nhát; ăn mạnh sáng sớm và chiều mát; rất sợ ồn ào, cần giữ yên tĩnh.
+  Nhiệt độ ưa thích 20–28°C; áp suất ổn định thì ăn đều. Mồi: cám, khoai lang, ốc vặn.
+- **Cá trôi:** ăn tạp, dạn hơn chép; ăn mạnh khi trời âm u hoặc mưa nhỏ, thích nước hơi đục;
+  hoạt động cả ngày. Mồi: cám tanh, mồi ủ chua nhẹ.
+- **Cá trắm cỏ:** ăn thực vật, ăn mạnh ban ngày khi trời ấm; thích chỗ có cỏ, bèo, rau muống.
+  Mồi: lá sắn, rau muống, cỏ non, cám xanh.
+- **Cá trắm đen:** ăn ốc, nhát và tinh như chép; thích yên tĩnh tuyệt đối; ăn mạnh đêm và sáng sớm.
+  Mồi: ốc vặn đập dập, ốc bươu.
+- **Cá mè (hoa/trắng):** ăn lọc, lửng lơ tầng mặt–tầng giữa; ăn mạnh khi nắng ấm (tảo phát triển).
+  Câu lửng, mồi: cám chua/thơm, mồi ủ lên men nhẹ. Trời lạnh sâu thì kém hẳn.
+- **Cá rô phi:** dễ tính nhất, ăn cả ngày khi 25–32°C; dưới 20°C thì kém ăn rõ rệt.
+  Mồi gì cũng ăn: cám, giun, tép.
+- **Cá diếc:** nhỏ, miệng bé, ăn nhẹ và tinh; thích nước tĩnh, sáng sớm/chiều mát;
+  dùng lưỡi nhỏ, mồi nhỏ (cám mịn, giun quế); rất nhạy với động và bóng người.
 
 ## 8. Mùa ở Việt Nam (độ tin cậy: trung bình)
 
