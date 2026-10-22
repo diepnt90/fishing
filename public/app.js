@@ -93,7 +93,7 @@ async function predict() {
   try {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}` +
-      `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,weather_code` +
+      `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,weather_code,is_day` +
       `&hourly=pressure_msl&daily=sunrise,sunset&timezone=auto&forecast_days=1`
     );
     wx = await r.json();
@@ -134,7 +134,7 @@ function demoScore(c, wx, moon, nowH) {
   let s = 0;
   const toH = (iso) => { const d = new Date(iso); return d.getHours() + d.getMinutes() / 60; };
   const sr0 = toH(wx.daily.sunrise[0]), ss0 = toH(wx.daily.sunset[0]);
-  const isDay = nowH >= sr0 && nowH <= ss0;
+  const isDay = c.is_day === 1 ? true : c.is_day === 0 ? false : (nowH >= sr0 && nowH <= ss0);
 
   // mặt trăng 25đ
   const prox = Math.min(moon.illum, 1 - moon.illum); // gần non/tròn
