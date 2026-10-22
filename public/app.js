@@ -107,7 +107,7 @@ async function predict() {
   try {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}` +
-      `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,is_day` +
+      `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,precipitation,is_day` +
       `&hourly=pressure_msl&daily=sunrise,sunset&timezone=auto&forecast_days=1`
     );
     wx = await r.json();
@@ -178,6 +178,14 @@ function demoScore(c, wx, moon, nowH) {
   const cl = c.cloud_cover;
   const clPts = cl >= 20 && cl <= 60 ? 10 : cl < 20 ? 6 : cl <= 90 ? 7 : 4; s += clPts;
   chips.push({ k: "Mây", v: `${cl}%`, d: cl >= 20 && cl <= 60 ? "Âm u nhẹ, cá dạn hơn" : cl < 20 ? (isDay ? "Nắng gắt" : "Trời quang") : "Nhiều mây", cls: clPts >= 8 ? "good" : "warn" });
+
+  // mưa: hiển thị + mô tả từ mã thời tiết (chưa chấm điểm ở demo — LLM sẽ cân nhắc khi cắm AI thật)
+  const wmoDesc = {0:"Quang đãng",1:"Chủ yếu quang đãng",2:"Mây rải rác",3:"Âm u",45:"Sương mù",48:"Sương mù đóng băng",51:"Mưa phùn nhẹ",53:"Mưa phùn",55:"Mưa phùn dày",56:"Mưa phùn đóng băng",57:"Mưa phùn đóng băng",61:"Mưa nhẹ",63:"Mưa vừa",65:"Mưa to",66:"Mưa đóng băng",67:"Mưa đóng băng",71:"Tuyết nhẹ",73:"Tuyết",75:"Tuyết dày",77:"Tuyết hạt",80:"Mưa rào nhẹ",81:"Mưa rào vừa",82:"Mưa rào to",85:"Mưa tuyết",86:"Mưa tuyết",95:"Dông",96:"Dông kèm mưa đá",99:"Dông kèm mưa đá"};
+  const pr = c.precipitation ?? 0;
+  const wmo = wmoDesc[c.weather_code] ?? "";
+  chips.push({ k: "Mưa", v: pr > 0 ? `${pr} mm` : "Không mưa",
+    d: pr > 0 && pr <= 2.5 ? `${wmo} — kích thích cá ăn` : pr > 2.5 ? `${wmo} — nước đục, kém ăn` : (wmo || "Trời khô ráo"),
+    cls: pr > 0 && pr <= 2.5 ? "good" : pr > 2.5 ? "bad" : "" });
 
   // nhiệt độ 15đ
   const t = c.temperature_2m;

@@ -40,6 +40,7 @@ export async function onRequestPost({ request, env }) {
   const p = weather.pressure_msl ?? 1013;
   const w = weather.wind_speed_10m ?? 8;
   const hu = weather.relative_humidity_2m ?? 70;
+  const pr = weather.precipitation ?? 0;
   const wdirs = ["Bắc", "Đông Bắc", "Đông", "Đông Nam", "Nam", "Tây Nam", "Tây", "Tây Bắc"];
   const wdir = weather.wind_direction_10m;
   const wdirName = wdir == null ? "" : wdirs[Math.round(wdir / 45) % 8];
@@ -66,6 +67,7 @@ export async function onRequestPost({ request, env }) {
       { k: "Áp suất", v: `${Math.round(p)} hPa`, d: "Từ API thời tiết", cls: p >= 1013 && p <= 1022 ? "good" : "warn" },
       { k: "Gió", v: `${Math.round(w)} km/h${wdirName ? " · " + wdirName : ""}`, d: "Từ API thời tiết", cls: w < 15 ? "good" : "warn" },
       { k: "Độ ẩm", v: `${hu}%`, d: hu >= 85 ? "Ẩm cao — có thể sắp mưa" : "Bình thường", cls: "" },
+      { k: "Mưa", v: pr > 0 ? `${pr} mm` : "Không mưa", d: pr > 0 && pr <= 2.5 ? "Mưa nhỏ — kích thích cá ăn" : pr > 2.5 ? "Mưa to — kém" : "Trời khô ráo", cls: pr > 0 && pr <= 2.5 ? "good" : pr > 2.5 ? "bad" : "" },
     ],
     demo: true,
   });
