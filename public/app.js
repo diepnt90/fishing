@@ -218,12 +218,15 @@ function setVerdict(title, sub, score) {
    nước lạnh → xuống đáy. Animation đàn cá tụ về đúng tầng này. */
 function feedingDepth(c, trend, nearGolden, nowH) {
   let d = 1; // mặc định lửng
-  const t = c.temperature_2m, cl = c.cloud_cover;
+  const t = c.temperature_2m, cl = c.cloud_cover, w = c.wind_speed_10m;
   if (cl < 30 && t > 30 && nowH >= 10 && nowH <= 15) d += 1;
   if (cl >= 40 && cl <= 80) d -= 0.5;
   if (trend < -1) d -= 0.5;
   if (t < 20) d += 0.5;
   if (nearGolden) d -= 0.5;
+  // Thiếu oxy (kinh nghiệm thực tế của Điệp): trời oi nóng + lặng gió → oxy hòa tan
+  // thấp, cá (kể cả cá đáy) nổi lên tầng lửng/mặt để hớp oxy
+  if (t >= 30 && w < 10) d -= 0.5;
   return Math.max(0, Math.min(2, d));
 }
 

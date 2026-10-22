@@ -20,4 +20,4 @@ Web này phục vụ câu 6 loài cá nước ngọt ao/hồ/sông Việt Nam:
 
 ## Mẹo từ cộng đồng
 
-- *(Chờ bổ sung từ các hội nhóm câu cá)*
+- **Quy luật:** Cá (kể cả cá đáy như chép, diếc) chỉ đi ăn lửng/mặt vào những hôm thiếu oxy — trời oi nóng, lặng gió. Bình thường cá đáy vẫn ăn đáy. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
