@@ -132,6 +132,9 @@ async function predict() {
 function demoScore(c, wx, moon, nowH) {
   const chips = [];
   let s = 0;
+  const toH = (iso) => { const d = new Date(iso); return d.getHours() + d.getMinutes() / 60; };
+  const sr0 = toH(wx.daily.sunrise[0]), ss0 = toH(wx.daily.sunset[0]);
+  const isDay = nowH >= sr0 && nowH <= ss0;
 
   // mặt trăng 25đ
   const prox = Math.min(moon.illum, 1 - moon.illum); // gần non/tròn
@@ -156,7 +159,7 @@ function demoScore(c, wx, moon, nowH) {
   // mây 10đ
   const cl = c.cloud_cover;
   const clPts = cl >= 20 && cl <= 60 ? 10 : cl < 20 ? 6 : cl <= 90 ? 7 : 4; s += clPts;
-  chips.push({ k: "Mây", v: `${cl}%`, d: cl >= 20 && cl <= 60 ? "Âm u nhẹ, cá dạn hơn" : cl < 20 ? "Nắng gắt" : "Nhiều mây", cls: clPts >= 8 ? "good" : "warn" });
+  chips.push({ k: "Mây", v: `${cl}%`, d: cl >= 20 && cl <= 60 ? "Âm u nhẹ, cá dạn hơn" : cl < 20 ? (isDay ? "Nắng gắt" : "Trời quang") : "Nhiều mây", cls: clPts >= 8 ? "good" : "warn" });
 
   // nhiệt độ 15đ
   const t = c.temperature_2m;
@@ -164,9 +167,7 @@ function demoScore(c, wx, moon, nowH) {
   chips.push({ k: "Nhiệt độ", v: `${Math.round(t)}°C`, d: t >= 24 && t <= 30 ? "Vùng nhiệt cá ăn mạnh" : "Hơi lệch vùng lý tưởng", cls: tPts >= 12 ? "good" : tPts >= 8 ? "warn" : "bad" });
 
   // giờ vàng bình minh/hoàng hôn 10đ
-  const toH = (iso) => { const d = new Date(iso); return d.getHours() + d.getMinutes() / 60; };
-  const sr = toH(wx.daily.sunrise[0]), ss = toH(wx.daily.sunset[0]);
-  const nearGolden = Math.abs(nowH - sr) < 1 || Math.abs(nowH - ss) < 1;
+  const nearGolden = Math.abs(nowH - sr0) < 1 || Math.abs(nowH - ss0) < 1;
   s += nearGolden ? 10 : 3;
   chips.push({ k: "Giờ solunar", v: moon.major.join(" & "), d: nearGolden ? "Đang trong giờ vàng!" : "Khung ăn mạnh trong ngày", cls: nearGolden ? "good" : "warn" });
 
