@@ -81,7 +81,9 @@ $("#gps-btn").addEventListener("click", () => {
 /* ---------- mặt trăng & solunar (tính tại chỗ) ---------- */
 function moonInfo(date = new Date()) {
   const synodic = 29.53058867;
-  const known = Date.UTC(2000, 0, 6, 18, 14) / 86400000;
+  // Mốc trăng non chuẩn thiên văn: 10/10/2026 15:50 UTC (hiệu chỉnh 22/10/2026,
+  // trước đây dùng mốc 2000 bị lệch ~1 ngày so với lịch âm thực tế)
+  const known = Date.UTC(2026, 9, 10, 15, 50) / 86400000;
   const days = date.getTime() / 86400000 - known;
   const age = ((days % synodic) + synodic) % synodic;
   const illum = (1 - Math.cos((2 * Math.PI * age) / synodic)) / 2;
