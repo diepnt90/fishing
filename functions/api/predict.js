@@ -39,6 +39,7 @@ export async function onRequestPost({ request, env }) {
   const t = weather.temperature_2m ?? 28;
   const p = weather.pressure_msl ?? 1013;
   const w = weather.wind_speed_10m ?? 8;
+  const hu = weather.relative_humidity_2m ?? 70;
   const illum = moon.illum ?? 0.5;
 
   let score = 40;
@@ -61,6 +62,7 @@ export async function onRequestPost({ request, env }) {
       { k: "Nhiệt độ", v: `${Math.round(t)}°C`, d: "Từ API thời tiết", cls: t >= 24 && t <= 30 ? "good" : "warn" },
       { k: "Áp suất", v: `${Math.round(p)} hPa`, d: "Từ API thời tiết", cls: p >= 1013 && p <= 1022 ? "good" : "warn" },
       { k: "Gió", v: `${Math.round(w)} km/h`, d: "Từ API thời tiết", cls: w < 15 ? "good" : "warn" },
+      { k: "Độ ẩm", v: `${hu}%`, d: hu >= 85 ? "Ẩm cao — có thể sắp mưa" : "Bình thường", cls: "" },
     ],
     demo: true,
   });

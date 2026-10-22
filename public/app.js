@@ -180,6 +180,13 @@ function demoScore(c, wx, moon, nowH) {
   const tPts = t >= 24 && t <= 30 ? 15 : (t >= 20 && t < 24) || (t > 30 && t <= 33) ? 10 : 5; s += tPts;
   chips.push({ k: "Nhiệt độ", v: `${Math.round(t)}°C`, d: t >= 24 && t <= 30 ? "Vùng nhiệt cá ăn mạnh" : "Hơi lệch vùng lý tưởng", cls: tPts >= 12 ? "good" : tPts >= 8 ? "warn" : "bad" });
 
+  // độ ẩm: chỉ hiển thị tham khảo (không tính điểm — độ ẩm không tác động trực tiếp lên cá,
+  // chỉ là dấu hiệu kèm theo của mưa/âm u, mà 2 yếu tố đó đã được chấm điểm riêng)
+  const hu = c.relative_humidity_2m;
+  chips.push({ k: "Độ ẩm", v: `${hu}%`,
+    d: hu >= 85 ? "Ẩm cao — thường đi kèm âm u/sắp mưa" : hu >= 60 ? "Bình thường" : "Khô ráo",
+    cls: hu >= 85 ? "warn" : "" });
+
   // giờ vàng bình minh/hoàng hôn 10đ
   const nearGolden = Math.abs(nowH - sr0) < 1 || Math.abs(nowH - ss0) < 1;
   s += nearGolden ? 10 : 3;
