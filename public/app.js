@@ -2,7 +2,39 @@
 "use strict";
 
 const $ = (s) => document.querySelector(s);
-const state = { lat: null, lon: null, name: "", animId: null };
+const state = { lat: null, lon: null, name: "", animId: null, species: new Set() };
+
+/* ---------- loài cá ---------- */
+const SPECIES = {
+  chep:    { name: "Cá chép",  base: 2   },
+  troi:    { name: "Cá trôi",  base: 1.5 },
+  tramDen: { name: "Trắm đen", base: 2   },
+  tramCo:  { name: "Trắm cỏ",  base: 1   },
+  me:      { name: "Cá mè",    base: 0.5 },
+  roPhi:   { name: "Cá rô phi", base: 1   },
+  diec:    { name: "Cá diếc",  base: 2   },
+};
+const ZONE_LABEL = ["Mặt", "Lửng", "Đáy"];
+const ZONE_TIP = [
+  "Thả phao nổi, mồi tầng mặt",
+  "Câu lửng ~1–2m",
+  "Chì chạm đáy",
+];
+function initSpeciesChips() {
+  const box = $("#species-chips");
+  Object.entries(SPECIES).forEach(([key, sp]) => {
+    state.species.add(key);
+    const b = document.createElement("button");
+    b.className = "sp-chip selected"; b.textContent = sp.name; b.dataset.key = key;
+    b.addEventListener("click", () => {
+      b.classList.toggle("selected");
+      b.classList.contains("selected") ? state.species.add(key) : state.species.delete(key);
+      if (state.lat != null && state.species.size) predict();
+    });
+    box.appendChild(b);
+  });
+}
+initSpeciesChips();
 
 /* ---------- tabs ---------- */
 document.querySelectorAll(".seg-btn").forEach((btn) => {
@@ -27,6 +59,7 @@ $("#change-place").addEventListener("click", () => {
   $("#chosen-place").classList.add("hidden");
   $("#scene-card").classList.add("hidden");
   $("#factors-card").classList.add("hidden");
+  $("#depth-card").classList.add("hidden");
   stopSea();
 });
 
@@ -120,7 +153,8 @@ async function predict() {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 4000);
     const r = await fetch("/api/predict", {
       method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
-      body: JSON.stringify({ lat: state.lat, lon: state.lon, weather: c, moon: { illum: moon.illum, phase: moon.phaseName } })
+      body: JSON.stringify({ lat: state.lat, lon: state.lon, weather: c,
+        moon: { illum: moon.illum, phase: moon.phaseName }, species: [...state.species] })
     });
     clearTimeout(t);
     if (r.ok) api = await r.json();
@@ -128,6 +162,7 @@ async function predict() {
 
   const data = api || demoScore(c, wx, moon, nowH);
   renderResult(data, c, moon);
+  renderDepth(c, wx, moon, nowH);
   $("#ai-note-text").textContent = api && !api.demo
     ? "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế."
     : "Đang ở chế độ demo: điểm số tính bằng thuật toán thử nghiệm. Bản chính thức sẽ gửi dữ liệu này lên LLM để phân tích.";
@@ -202,6 +237,51 @@ function setVerdict(title, sub, score) {
   const el = $("#verdict-title");
   el.style.color = score == null ? "var(--ink)" : score >= 75 ? "var(--glow)" : score >= 55 ? "var(--lime)" : score >= 30 ? "var(--amber)" : "var(--coral)";
   el.style.textShadow = `0 0 34px ${score == null ? "transparent" : score >= 75 ? "rgba(62,230,196,.55)" : score >= 55 ? "rgba(163,230,53,.45)" : score >= 30 ? "rgba(245,185,66,.45)" : "rgba(255,107,107,.45)"}`;
+}
+
+/* ---------- tầng nước cá ăn (0=mặt, 1=lửng, 2=đáy) ---------- */
+function depthFor(key, c, trend, nearGolden, nowH) {
+  let d = SPECIES[key].base;
+  const notes = [];
+  const t = c.temperature_2m, cl = c.cloud_cover;
+  if (cl < 30 && t > 30 && nowH >= 10 && nowH <= 15) { d += 1; notes.push("nắng gắt giữa trưa, cá xuống sâu"); }
+  if (cl >= 40 && cl <= 80) { d -= 0.5; notes.push("trời âm u, cá dạn lên cao"); }
+  if (trend < -1) { d -= 0.5; notes.push("áp suất đang giảm, cá nổi lên"); }
+  if (t < 20) { d += 0.5; notes.push("nước lạnh, cá xuống đáy"); }
+  if (nearGolden) { d -= 0.5; notes.push("giờ vàng, cá lên kiếm ăn"); }
+  d = Math.max(0, Math.min(2, d));
+  const zone = d < 0.75 ? 0 : d < 1.5 ? 1 : 2;
+  return { key, depth: d, zone, notes };
+}
+
+function renderDepth(c, wx, moon, nowH) {
+  const card = $("#depth-card");
+  card.classList.remove("hidden");
+  const hp = wx.hourly?.pressure_msl || [];
+  const trend = hp.length > 3 ? hp[hp.length - 1] - hp[hp.length - 4] : 0;
+  const toH = (iso) => { const d = new Date(iso); return d.getHours() + d.getMinutes() / 60; };
+  const sr = toH(wx.daily.sunrise[0]), ss = toH(wx.daily.sunset[0]);
+  const nearGolden = Math.abs(nowH - sr) < 1 || Math.abs(nowH - ss) < 1;
+
+  const results = [...state.species].map((k) => depthFor(k, c, trend, nearGolden, nowH));
+
+  const markers = $("#depth-markers"); markers.innerHTML = "";
+  const rows = $("#depth-rows"); rows.innerHTML = "";
+  results.forEach((r, i) => {
+    const m = document.createElement("div");
+    m.className = "depth-marker";
+    m.style.top = `${8 + (r.depth / 2) * 84}%`;
+    m.style.animationDelay = `${i * 0.25}s`;
+    m.title = SPECIES[r.key].name;
+    markers.appendChild(m);
+
+    const row = document.createElement("div");
+    row.className = "depth-row"; row.style.animationDelay = `${i * 0.07}s`;
+    row.innerHTML = `<span class="sp">${escapeHtml(SPECIES[r.key].name)}</span>` +
+      `<span class="depth-badge z${r.zone}">${ZONE_LABEL[r.zone]}</span>` +
+      `<span class="tip">${escapeHtml(ZONE_TIP[r.zone])}${r.notes.length ? "<br>" + escapeHtml(r.notes.join("; ")) : ""}</span>`;
+    rows.appendChild(row);
+  });
 }
 
 /* ---------- đồng hồ điểm ---------- */

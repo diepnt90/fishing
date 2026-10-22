@@ -10,7 +10,7 @@
 export async function onRequestPost({ request, env }) {
   let body = {};
   try { body = await request.json(); } catch { /* bỏ qua */ }
-  const { weather = {}, moon = {} } = body;
+  const { weather = {}, moon = {}, species = [] } = body;
 
   // ---- TODO: thay bằng fetch tới LLM ----
   // Đọc skill kiến thức câu cá (file public/skills/kinh-nghiem-cau-ca.md,
@@ -20,9 +20,13 @@ export async function onRequestPost({ request, env }) {
   // const prompt = [
   //   "Bạn là chuyên gia câu cá Việt Nam. Dựa vào KINH NGHIỆM dưới đây và SỐ LIỆU hiện tại,",
   //   "hãy dự đoán xem NGAY LÚC NÀY cá có đi ăn không.",
-  //   "Trả về JSON: { score (0-100), title (ngắn gọn, tiếng Việt), sub (1 câu giải thích), chips: [{k,v,d,cls}] }.",
+  //   "Trả về JSON: { score (0-100), title (ngắn gọn, tiếng Việt), sub (1 câu giải thích),",
+  //   "  chips: [{k,v,d,cls}],",
+  //   "  depth: [{ species, zone ('Mặt'|'Lửng'|'Đáy'), tip }] }.",
+  //   "Người dùng chỉ câu các loài trong danh sách species gửi kèm — hãy phân tích tầng nước",
+  //   "cho từng loài dựa vào mục 10 của kinh nghiệm.",
   //   "--- KINH NGHIỆM ---", skill,
-  //   "--- SỐ LIỆU ---", JSON.stringify({ weather, moon, lat: body.lat, lon: body.lon }),
+  //   "--- SỐ LIỆU ---", JSON.stringify({ weather, moon, species, lat: body.lat, lon: body.lon }),
   // ].join("\n");
   // const ai = await fetch("https://api.openai.com/v1/chat/completions", {
   //   method: "POST",
@@ -60,6 +64,8 @@ export async function onRequestPost({ request, env }) {
       { k: "Áp suất", v: `${Math.round(p)} hPa`, d: "Từ API thời tiết", cls: p >= 1013 && p <= 1022 ? "good" : "warn" },
       { k: "Gió", v: `${Math.round(w)} km/h`, d: "Từ API thời tiết", cls: w < 15 ? "good" : "warn" },
     ],
+    // client tự tính tầng nước chi tiết ở demo; API thật sẽ trả depth cho từng loài
+    depth: (species || []).map((s) => ({ species: s, zone: "—", tip: "xem chi tiết trên web" })),
     demo: true,
   });
 }

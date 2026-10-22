@@ -78,3 +78,24 @@
 ## 9. Mẹo từ cộng đồng (bổ sung dần)
 
 - *(Chờ bạn thêm vào từ các hội nhóm câu cá)*
+
+## 10. Tầng nước cá ăn: đáy / lửng / mặt (độ tin cậy: trung bình)
+
+> Quy ước: **mặt** = tầng mặt–0,5m; **lửng** = tầng giữa ~1–2m; **đáy** = sát đáy.
+
+**Tầng mặc định theo loài:**
+- Cá chép: **đáy** (mò mẫm bùn tìm mồi).
+- Cá trôi: **đáy–lửng thấp**.
+- Trắm đen: **đáy** (ăn ốc dưới đáy).
+- Trắm cỏ: **lửng–mặt** (ăn cỏ, bèo nổi).
+- Cá mè: **lửng–mặt** (ăn lọc tảo lơ lửng).
+- Cá rô phi: **lửng** linh hoạt, có thể lên mặt khi ấm.
+- Cá diếc: **đáy**, sát đáy.
+
+**Thời tiết làm dịch chuyển tầng ăn:**
+- Nắng gắt giữa trưa (10h–15h, nhiệt >30°C): cá xuống sâu hơn 1 tầng (kể cả loài lửng).
+- Trời âm u, mát (mây 40–80%): cá dạn, nổi lên cao hơn.
+- Áp suất đang giảm (trước mưa): cá nổi lên tầng cao, ăn tích cực.
+- Nước lạnh (<20°C): cá xuống đáy, chậm chạp.
+- Giờ vàng bình minh/hoàng hôn: cá lên gần mặt kiếm ăn.
+- Mưa nhỏ: cá lên mặt/lửng; mưa lớn nước đục: cá dạt đáy, nép bờ.
