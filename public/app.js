@@ -107,7 +107,7 @@ async function predict() {
   try {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}` +
-      `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,weather_code,is_day` +
+      `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,is_day` +
       `&hourly=pressure_msl&daily=sunrise,sunset&timezone=auto&forecast_days=1`
     );
     wx = await r.json();
@@ -168,7 +168,11 @@ function demoScore(c, wx, moon, nowH) {
   // gió 15đ
   const w = c.wind_speed_10m;
   const wPts = w < 10 ? 15 : w < 20 ? 10 : w < 30 ? 5 : 2; s += wPts;
-  chips.push({ k: "Gió", v: `${Math.round(w)} km/h`, d: w < 10 ? "Nhẹ, lý tưởng" : w < 20 ? "Vừa phải" : "Mạnh, khó câu", cls: wPts >= 10 ? "good" : wPts >= 5 ? "warn" : "bad" });
+  const wdirs = ["Bắc", "Đông Bắc", "Đông", "Đông Nam", "Nam", "Tây Nam", "Tây", "Tây Bắc"];
+  const wdirName = c.wind_direction_10m == null ? "" : wdirs[Math.round(c.wind_direction_10m / 45) % 8];
+  chips.push({ k: "Gió", v: `${Math.round(w)} km/h${wdirName ? " · " + wdirName : ""}`,
+    d: w < 10 ? "Nhẹ, lý tưởng" : w < 20 ? "Vừa phải" : "Mạnh, khó câu",
+    cls: wPts >= 10 ? "good" : wPts >= 5 ? "warn" : "bad" });
 
   // mây 10đ
   const cl = c.cloud_cover;
