@@ -13,11 +13,22 @@ export async function onRequestPost({ request, env }) {
   const { weather = {}, moon = {} } = body;
 
   // ---- TODO: thay bằng fetch tới LLM ----
-  // const prompt = buildPrompt({ weather, moon, skill: FISHING_SKILL });
+  // Đọc skill kiến thức câu cá (file public/skills/kinh-nghiem-cau-ca.md,
+  // được serve tại /skills/kinh-nghiem-cau-ca.md) để nhét vào prompt.
+  // const skillRes = await fetch(new URL("/skills/kinh-nghiem-cau-ca.md", request.url));
+  // const skill = skillRes.ok ? await skillRes.text() : "";
+  // const prompt = [
+  //   "Bạn là chuyên gia câu cá Việt Nam. Dựa vào KINH NGHIỆM dưới đây và SỐ LIỆU hiện tại,",
+  //   "hãy dự đoán xem NGAY LÚC NÀY cá có đi ăn không.",
+  //   "Trả về JSON: { score (0-100), title (ngắn gọn, tiếng Việt), sub (1 câu giải thích), chips: [{k,v,d,cls}] }.",
+  //   "--- KINH NGHIỆM ---", skill,
+  //   "--- SỐ LIỆU ---", JSON.stringify({ weather, moon, lat: body.lat, lon: body.lon }),
+  // ].join("\n");
   // const ai = await fetch("https://api.openai.com/v1/chat/completions", {
   //   method: "POST",
   //   headers: { Authorization: `Bearer ${env.LLM_API_KEY}`, "Content-Type": "application/json" },
-  //   body: JSON.stringify({ model: "gpt-5-nano", messages: [{ role: "user", content: prompt }] }),
+  //   body: JSON.stringify({ model: "gpt-5-nano", response_format: { type: "json_object" },
+  //                          messages: [{ role: "user", content: prompt }] }),
   // });
   // const verdict = parseAi(await ai.json());
   // return Response.json({ ...verdict, demo: false });

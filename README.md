@@ -37,5 +37,5 @@ functions/
 - [x] Thời tiết thật từ Open-Meteo (không cần key)
 - [ ] Cắm WeatherAPI.com + OpenWeatherMap làm nguồn đối chứng (cần key)
 - [ ] Cắm LLM vào `functions/api/predict.js` (GPT-5 nano / Gemini 2.5 Flash-Lite)
-- [ ] Skill kiến thức câu cá (`skills/`) — chắt lọc từ forum/hội nhóm
+- [x] Skill kiến thức câu cá (`public/skills/kinh-nghiem-cau-ca.md`) — bản đầu, chờ bồi đắp từ forum
 - [ ] Log kết quả câu thực tế để fine-tune về sau
