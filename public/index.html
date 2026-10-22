@@ -59,10 +59,6 @@
       <button id="change-place" class="link-btn">đổi</button>
     </div>
 
-    <div class="species-block">
-      <p class="hint">Định câu loài nào? <span class="hint-dim">(chọn nhiều được)</span></p>
-      <div class="species-chips" id="species-chips"></div>
-    </div>
   </section>
 
   <!-- ============ PREDICTION SCENE ============ -->
@@ -106,19 +102,6 @@
     <div class="ai-note">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2-6.3-4.5-6.3 4.5L8 13.8 2 9.2h7.6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <p id="ai-note-text">Đang ở chế độ demo: điểm số tính bằng thuật toán thử nghiệm. Bản chính thức sẽ gửi dữ liệu này lên LLM để phân tích.</p>
-    </div>
-  </section>
-  <!-- ============ DEPTH ============ -->
-  <section class="card depth-card hidden" id="depth-card">
-    <h2><span class="step">4</span> Cá ăn ở tầng nào?</h2>
-    <div class="depth-viz">
-      <div class="depth-column" aria-hidden="true">
-        <div class="depth-zone z0"><span>Mặt</span></div>
-        <div class="depth-zone z1"><span>Lửng</span></div>
-        <div class="depth-zone z2"><span>Đáy</span></div>
-        <div id="depth-markers"></div>
-      </div>
-      <div class="depth-rows" id="depth-rows"></div>
     </div>
   </section>
 </main>
