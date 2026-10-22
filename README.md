@@ -25,7 +25,7 @@ app tự fallback sang thuật toán demo tại chỗ.
 public/
   index.html   — khung trang
   styles.css   — design system "đáy biển phát quang"
-  app.js       — chọn vị trí (tìm kiếm / GPS / bản đồ) + gọi thời tiết +
+  app.js       — chọn vị trí (tìm kiếm / GPS) + gọi thời tiết +
                  tính pha trăng & solunar + animation đàn cá + đồng hồ điểm
 functions/
   api/predict.js — Cloudflare Function: hiện trả demo, TODO cắm LLM

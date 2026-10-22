@@ -2,7 +2,7 @@
 "use strict";
 
 const $ = (s) => document.querySelector(s);
-const state = { lat: null, lon: null, name: "", map: null, marker: null, animId: null };
+const state = { lat: null, lon: null, name: "", animId: null };
 
 /* ---------- tabs ---------- */
 document.querySelectorAll(".seg-btn").forEach((btn) => {
@@ -12,9 +12,7 @@ document.querySelectorAll(".seg-btn").forEach((btn) => {
     });
     document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active"); btn.setAttribute("aria-selected", "true");
-    const panel = $("#panel-" + btn.dataset.tab);
-    panel.classList.add("active");
-    if (btn.dataset.tab === "map") initMap();
+    $("#panel-" + btn.dataset.tab).classList.add("active");
   });
 });
 
@@ -79,22 +77,6 @@ $("#gps-btn").addEventListener("click", () => {
     { timeout: 10000 }
   );
 });
-
-/* ---------- 3) bản đồ (Leaflet + OpenStreetMap, không cần key) ---------- */
-function initMap() {
-  if (state.map) { setTimeout(() => state.map.invalidateSize(), 100); return; }
-  const map = L.map("map").setView([14.0583, 108.2772], 6); // Việt Nam
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 18
-  }).addTo(map);
-  map.on("click", (e) => {
-    if (state.marker) state.marker.remove();
-    state.marker = L.marker(e.latlng).addTo(map);
-    choosePlace(e.latlng.lat, e.latlng.lng, `Điểm trên bản đồ (${e.latlng.lat.toFixed(3)}, ${e.latlng.lng.toFixed(3)})`);
-  });
-  state.map = map;
-  setTimeout(() => map.invalidateSize(), 100);
-}
 
 /* ---------- mặt trăng & solunar (tính tại chỗ) ---------- */
 function moonInfo(date = new Date()) {

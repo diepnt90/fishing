@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -38,7 +37,6 @@
     <div class="seg" role="tablist" aria-label="Cách chọn vị trí">
       <button class="seg-btn active" data-tab="search" role="tab" aria-selected="true">Tìm địa điểm</button>
       <button class="seg-btn" data-tab="gps" role="tab" aria-selected="false">Vị trí của tôi</button>
-      <button class="seg-btn" data-tab="map" role="tab" aria-selected="false">Chọn trên bản đồ</button>
     </div>
 
     <div class="tab-panel active" id="panel-search">
@@ -53,11 +51,6 @@
       <p class="hint">Dùng GPS của thiết bị để lấy tọa độ hiện tại của bạn.</p>
       <button id="gps-btn" class="btn-primary">Lấy vị trí hiện tại</button>
       <p id="gps-status" class="status"></p>
-    </div>
-
-    <div class="tab-panel" id="panel-map">
-      <p class="hint">Chạm vào bản đồ để ghim điểm câu.</p>
-      <div id="map"></div>
     </div>
 
     <div id="chosen-place" class="chosen-place hidden">
@@ -116,7 +109,6 @@
   <p>Dữ liệu thời tiết: Open-Meteo · Pha trăng &amp; giờ solunar tính tại chỗ · <a href="https://github.com/diepnt90/fishing">GitHub</a></p>
 </footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
