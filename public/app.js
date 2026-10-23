@@ -142,6 +142,7 @@ function choosePlace(lat, lon, name, gps = false) {
   state.lat = lat; state.lon = lon; state.name = name; state.gps = gps;
   $("#chosen-place-name").textContent = name;
   $("#chosen-place").classList.remove("hidden");
+  $("#search-results").innerHTML = ""; // chọn xong thì ẩn danh sách gợi ý
   predict();
 }
 $("#change-place").addEventListener("click", () => {
