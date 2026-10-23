@@ -33,9 +33,9 @@ const T = {
   },
 };
 
-/* lưới cache: tìm địa điểm → 0.02° (~2km); GPS → 0.45° (~50km) */
+/* lưới cache: tìm địa điểm → 0.02° (~2km); GPS → 0.27° (~30km) */
 function cacheGrid(lat, lon, gps) {
-  const step = gps ? 0.45 : 0.02;
+  const step = gps ? 0.27 : 0.02;
   const dec = step < 0.1 ? 2 : 1;
   const r = (v) => (Math.round(v / step) * step).toFixed(dec);
   return `${r(lat)},${r(lon)}`;
