@@ -237,6 +237,10 @@ async function predict() {
   scene.classList.remove("hidden"); factors.classList.remove("hidden");
   scene.scrollIntoView({ behavior: "smooth", block: "nearest" });
   setVerdict(t("vLoadingT"), t("vLoadingS"), null);
+  startSonar(); // animation máy dò cá trong lúc chờ AI
+  $("#verdict").classList.add("is-loading");
+  $("#score").textContent = "–";
+  $("#gauge-arc").style.strokeDashoffset = 251.4;
 
   let wx;
   try {
@@ -248,7 +252,7 @@ async function predict() {
       `&timezone=auto&forecast_days=1&past_days=5`
     );
     wx = await r.json();
-  } catch { setVerdict(t("vNetErrT"), t("vNetErrS"), 0); return; }
+  } catch { setVerdict(t("vNetErrT"), t("vNetErrS"), 0); stopSea(); $("#verdict").classList.remove("is-loading"); return; }
 
   const c = wx.current, moon = moonInfo();
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
@@ -372,6 +376,7 @@ function demoScore(c, wx, moon, nowH) {
 }
 
 function renderResult(data, c, moon) {
+  $("#verdict").classList.remove("is-loading");
   animateScore(data.score);
   setVerdict(data.title, data.sub, data.score);
   const box = $("#chips"); box.innerHTML = "";
@@ -486,6 +491,72 @@ function animateScore(target) {
    Tầng ăn (depthAvg 0=mặt → 2=đáy) → đàn cá tụ về đúng tầng đó, di cư mượt mà. */
 function scoreColor(s) { return s >= 75 ? "#3ee6c4" : s >= 55 ? "#a3e635" : s >= 30 ? "#f5b942" : "#ff6b6b"; }
 function stopSea() { if (state.animId) cancelAnimationFrame(state.animId); state.animId = null; }
+
+/* ---------- sonar máy dò cá: chạy trong lúc chờ AI ---------- */
+function startSonar() {
+  stopSea();
+  const cv = $("#sea"), ctx = cv.getContext("2d");
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cx = W / 2, cy = H * 0.52, maxR = Math.hypot(W, H) / 2;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    ctx.beginPath(); ctx.arc(cx, cy, maxR * 0.45, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(62,230,196,.25)"; ctx.lineWidth = 2; ctx.stroke();
+    return;
+  }
+  const rings = [{ r: 0 }];
+  let lastPing = 0;
+  const blips = Array.from({ length: 6 }, (_, i) => {
+    const ang = hash1(i * 31 + 2) * Math.PI * 2, rr = maxR * (0.25 + hash1(i * 37 + 3) * 0.55);
+    return { x: cx + Math.cos(ang) * rr, y: cy + Math.sin(ang) * rr * 0.7, ang, glow: 0, s: 3 + hash1(i * 41 + 4) * 4 };
+  });
+  function frame(t) {
+    ctx.clearRect(0, 0, W, H);
+    // vòng ping lan ra từ tâm
+    if (t - lastPing > 1100) { rings.push({ r: 0 }); lastPing = t; }
+    for (let i = rings.length - 1; i >= 0; i--) {
+      const rg = rings[i];
+      rg.r += Math.max(1.4, maxR / 150);
+      const k = rg.r / maxR;
+      if (k >= 1) { rings.splice(i, 1); continue; }
+      ctx.beginPath(); ctx.arc(cx, cy, rg.r, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(62,230,196," + (0.45 * (1 - k)).toFixed(3) + ")";
+      ctx.lineWidth = 2; ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 10;
+      ctx.stroke(); ctx.shadowBlur = 0;
+    }
+    // tia quét xoay
+    const sw = (t / 1400) % (Math.PI * 2);
+    if (ctx.createConicGradient) {
+      const g = ctx.createConicGradient(sw - 0.6, cx, cy);
+      g.addColorStop(0, "rgba(62,230,196,0)");
+      g.addColorStop(0.09, "rgba(62,230,196,.22)");
+      g.addColorStop(0.1, "rgba(62,230,196,0)");
+      g.addColorStop(1, "rgba(62,230,196,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, maxR, 0, Math.PI * 2); ctx.closePath(); ctx.fill();
+    } else {
+      ctx.save(); ctx.strokeStyle = "rgba(62,230,196,.5)"; ctx.lineWidth = 2;
+      ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(sw) * maxR, cy + Math.sin(sw) * maxR); ctx.stroke(); ctx.restore();
+    }
+    // chấm cá sáng lên khi tia quét đi qua
+    blips.forEach((b) => {
+      let d = (sw - b.ang) % (Math.PI * 2);
+      if (d < 0) d += Math.PI * 2;
+      if (d < 0.15) b.glow = 1;
+      b.glow *= 0.965;
+      ctx.save();
+      ctx.globalAlpha = 0.22 + b.glow * 0.78;
+      ctx.fillStyle = "#3ee6c4"; ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 4 + b.glow * 16;
+      ctx.beginPath(); ctx.ellipse(b.x, b.y, b.s, b.s * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+    state.animId = requestAnimationFrame(frame);
+  }
+  state.animId = requestAnimationFrame(frame);
+}
 const hash1 = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
 function startSea(score, depthAvg = 1) {
