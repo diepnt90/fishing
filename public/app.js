@@ -403,6 +403,24 @@ function renderResult(data, c, moon) {
   setVerdict(data.title, data.sub, data.score);
   saveRecent(state.name, data.score, data.title);
   const box = $("#chips"); box.innerHTML = "";
+  // 6 yếu tố chấm điểm (kèm số điểm)
+  (data.factors || []).forEach((f) => {
+    const d = document.createElement("div");
+    const cls = f.pts >= 70 ? "good" : f.pts >= 40 ? "warn" : "bad";
+    d.className = "chip " + cls;
+    d.innerHTML = `<div class="k">${escapeHtml(f.k)} <span class="pts">${f.pts}đ</span></div><div class="v">${escapeHtml(f.v)}</div><div class="d">${escapeHtml(f.d || "")}</div>`;
+    box.appendChild(d);
+  });
+  // phạt/trừ thêm (nếu có)
+  (data.penalties || []).forEach((pn) => {
+    if (!pn.d && !pn.pts) return;
+    const d = document.createElement("div");
+    d.className = "chip " + (pn.pts < 0 ? "bad" : "good");
+    const sign = pn.pts > 0 ? "+" : "";
+    d.innerHTML = `<div class="k">Điều chỉnh <span class="pts">${sign}${pn.pts}đ</span></div><div class="d">${escapeHtml(pn.d || "")}</div>`;
+    box.appendChild(d);
+  });
+  // chips thông tin thêm (mặt trăng...)
   (data.chips || []).forEach((ch) => {
     const d = document.createElement("div");
     d.className = "chip " + (ch.cls || "");
