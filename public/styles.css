@@ -155,9 +155,14 @@ main > * { min-width: 0; } /* cho phép card co nhỏ hơn nội dung (bảng 48
 .score-num small { font-size: 1rem; font-weight: 500; color: var(--muted); }
 .verdict-title {
   font-size: clamp(1.7rem, 6vw, 2.6rem); font-weight: 800; letter-spacing: -.02em;
+  line-height: 1.15; overflow-wrap: break-word; max-width: 100%;
   text-shadow: 0 2px 30px rgba(0,0,0,.6);
 }
-.verdict-sub { color: var(--ink); opacity: .85; font-size: .95rem; max-width: 420px; text-shadow: 0 1px 12px rgba(0,0,0,.7); }
+.verdict-sub {
+  color: var(--ink); opacity: .85; font-size: .95rem; max-width: 420px;
+  text-shadow: 0 1px 12px rgba(0,0,0,.7);
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
 
 .scale-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: .78rem; color: var(--muted); }
 .scale-legend span::before {

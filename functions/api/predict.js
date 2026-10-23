@@ -161,8 +161,8 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "Predict RIGHT NOW whether fish are biting. Return pure JSON only (no markdown, no extra explanation):",
     "{",
     '  "score": number 0-100 (higher = more worth going fishing),',
-    '  "title": "exactly one of these 4, matching the score band — 75-100: GO FISHING! | 55-74: PRETTY GOOD | 30-54: HIT OR MISS | 0-29: STAY HOME (no extra words, no parentheses)",',
-    '  "sub": "one short sentence of explanation",',
+    '  "title": "short band title (system normalizes it — just put a placeholder)",',
+    '  "sub": "1-2 short sentences of explanation, max 2",',
     '  "chips": [',
     '    {"k": "Temperature", "v": "28°C", "d": "short reason", "cls": "good"},',
     "    ... factors: Pressure (with trend), Wind (with direction), Rain, Moon & solunar times, Humidity (reference)",
@@ -192,8 +192,8 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "Dự đoán NGAY LÚC NÀY cá có đi ăn không. Chỉ trả về JSON thuần (không markdown, không giải thích thêm):",
     "{",
     '  "score": số 0-100 (càng cao càng nên đi câu),',
-    '  "title": "đúng 1 trong 4 nhãn, khớp band điểm — 75-100: ĐI CÂU NGAY! | 55-74: KHÁ ĐẤY | 30-54: HÊN XUI | 0-29: Ở NHÀ ĐI (không thêm chữ, không ngoặc đơn)",',
-    '  "sub": "1 câu giải thích ngắn gọn",',
+    '  "title": "tiêu đề ngắn theo band điểm (hệ thống tự chuẩn hoá — cứ để tạm)",',
+    '  "sub": "1-2 câu giải thích ngắn gọn, tối đa 2 câu",',
     '  "chips": [',
     '    {"k": "Nhiệt độ", "v": "28°C", "d": "lý do ngắn", "cls": "good"},',
     "    ... các yếu tố: Áp suất (kèm xu hướng), Gió (kèm hướng), Mưa, Mặt trăng & giờ solunar, Độ ẩm (tham khảo)",
@@ -231,13 +231,18 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
 
   const score = Math.max(0, Math.min(100, Math.round(+v.score)));
   if (!Number.isFinite(score)) throw new Error("LLM score invalid");
+  // tiêu đề suy từ band điểm — không dùng title của AI (đã từng chép nguyên hướng dẫn vào title)
+  const title = score >= 75 ? (lang === "en" ? "GO FISHING!" : "ĐI CÂU NGAY!")
+    : score >= 55 ? (lang === "en" ? "PRETTY GOOD" : "KHÁ ĐẤY")
+    : score >= 30 ? (lang === "en" ? "HIT OR MISS" : "HÊN XUI")
+    : (lang === "en" ? "STAY HOME" : "Ở NHÀ ĐI");
   const okCls = (c) => ["good", "warn", "bad", ""].includes(c) ? c : "";
   const chips = Array.isArray(v.chips) ? v.chips.slice(0, 8).map((c) => ({
     k: String(c.k ?? ""), v: String(c.v ?? ""), d: String(c.d ?? ""), cls: okCls(c.cls),
   })) : [];
   const depth = [0, 1, 2].includes(v.depth) ? v.depth : 1;
 
-  return { score, title: String(v.title || ""), sub: String(v.sub || ""), chips, depth, demo: false };
+  return { score, title, sub: String(v.sub || ""), chips, depth, demo: false };
 }
 
 /* ---------- đối chứng 3 nguồn thời tiết ---------- */
