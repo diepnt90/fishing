@@ -10,7 +10,7 @@
  *   LLM_API_KEY — key OpenAI
  */
 
-const CACHE_ENABLED = false; // testing: mỗi request là 1 job mới; true: dedup job theo lưới+khung giờ (~1h)
+const CACHE_ENABLED = true; // dedup job theo lưới+khung giờ (~1h); false: testing, mỗi request 1 job mới
 const LLM_MODEL = "gpt-5-nano";
 
 /* chuỗi dùng chung, song ngữ */
