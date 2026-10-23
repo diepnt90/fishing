@@ -19,7 +19,8 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; overflow-x: hidden; overflow-x: clip; }
+@supports not (overflow: clip) { html { overflow-x: hidden; } }
 body {
   font-family: var(--font);
   color: var(--ink);
@@ -162,7 +163,7 @@ main > * { min-width: 0; } /* cho phép card co nhỏ hơn nội dung (bảng 48
 }
 
 /* --- factor chips --- */
-.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 10px; }
 .chip {
   background: rgba(0,0,0,.28); border: 1px solid var(--card-border);
   border-radius: 14px; padding: 12px 14px;
