@@ -21,7 +21,7 @@ vi: {
   step3: "Vì sao lại thế?",
   aiNoteLive: "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế.",
   aiNoteFallback: "AI chưa phản hồi — đang dùng thuật toán dự phòng.",
-  step4: "Biến động thời tiết", histHours: "5 giờ gần nhất", histDays: "5 ngày qua",
+  step4: "Biến động thời tiết", step5: "10 lần check gần nhất", histHours: "5 giờ gần nhất", histDays: "5 ngày qua",
   histNote: "AI dùng lịch sử này để đánh giá xu hướng (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...).",
   footer: "Dữ liệu thời tiết: Open-Meteo · Pha trăng & giờ solunar tính tại chỗ",
   searching: "Đang tìm…", noResult: "Không tìm thấy, thử tên khác nhé", netErr: "Lỗi mạng, thử lại nhé",
@@ -63,7 +63,7 @@ en: {
   step3: "Why?",
   aiNoteLive: "Analyzed by AI from live weather data.",
   aiNoteFallback: "AI didn't respond — using the fallback algorithm.",
-  step4: "Weather trends", histHours: "Last 5 hours", histDays: "Last 5 days",
+  step4: "Weather trends", step5: "Last 10 checks", histHours: "Last 5 hours", histDays: "Last 5 days",
   histNote: "The AI uses this history to judge trends (pressure falling or rising, temperature up/down…).",
   footer: "Weather data: Open-Meteo · Moon phase & solunar times computed on-device",
   searching: "Searching…", noResult: "Not found, try another name", netErr: "Network error, try again",
@@ -119,6 +119,7 @@ $("#lang-btn").addEventListener("click", () => {
   if (state.lat != null) predict(); // dự đoán lại bằng ngôn ngữ mới
 });
 applyLang();
+renderRecent();
 
 /* mã thời tiết WMO, song ngữ */
 const WMO = {
@@ -380,6 +381,7 @@ function renderResult(data, c, moon) {
   stopScanScore();
   animateScore(data.score);
   setVerdict(data.title, data.sub, data.score);
+  saveRecent(state.name, data.score, data.title);
   const box = $("#chips"); box.innerHTML = "";
   (data.chips || []).forEach((ch) => {
     const d = document.createElement("div");
@@ -387,6 +389,42 @@ function renderResult(data, c, moon) {
     d.innerHTML = `<div class="k">${escapeHtml(ch.k)}</div><div class="v">${escapeHtml(ch.v)}</div><div class="d">${escapeHtml(ch.d || "")}</div>`;
     box.appendChild(d);
   });
+}
+
+/* ---------- 5) 10 lần check gần nhất (lưu trên máy, localStorage) ---------- */
+const RECENT_KEY = "fishing-recent-v1";
+function loadRecent() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; }
+  catch { return []; }
+}
+function saveRecent(name, score, title) {
+  if (!name) return;
+  const list = loadRecent().filter((e) => e.name !== name); // trùng địa điểm → đưa lên đầu
+  list.unshift({ name, score, title, ts: Date.now() });
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 10))); } catch {}
+  renderRecent();
+}
+function renderRecent() {
+  const list = loadRecent(), card = $("#recent-card"), box = $("#recent-list");
+  if (!card || !box) return;
+  card.classList.toggle("hidden", list.length === 0);
+  box.innerHTML = "";
+  list.forEach((e) => {
+    const c = scoreColor(e.score);
+    const row = document.createElement("div");
+    row.className = "recent-row";
+    row.innerHTML = `<span class="recent-score" style="color:${c};border-color:${c}">${e.score}</span>` +
+      `<span class="recent-main"><span class="recent-name">${escapeHtml(e.name)}</span>` +
+      `<span class="recent-time">${fmtTime(e.ts)}</span></span>` +
+      `<span class="recent-verdict" style="color:${c}">${escapeHtml(e.title)}</span>`;
+    box.appendChild(row);
+  });
+}
+
+function fmtTime(ts) {
+  if (!ts) return "";
+  const d = new Date(ts), p = (n) => String(n).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())} ${p(d.getDate())}/${p(d.getMonth() + 1)}`;
 }
 
 function setVerdict(title, sub, score) {
