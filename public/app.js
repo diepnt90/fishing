@@ -270,7 +270,7 @@ async function predict() {
     }
     if (!job) return null;
     if (job.status === "done") return job; // trúng job đã xong (dedup)
-    for (let i = 0; i < 30; i++) { // poll tối đa ~60s
+    for (let i = 0; i < 90; i++) { // poll tối đa ~180s (chờ AI reasoning medium thoải mái)
       await sleep(2000);
       try {
         const pr = await fetch(`/api/predict?job=${encodeURIComponent(job.jobId)}`,

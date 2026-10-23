@@ -249,10 +249,10 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.LLM_API_KEY}`, "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(45000),
+    signal: AbortSignal.timeout(120000), // chờ AI thoải mái (reasoning medium)
     body: JSON.stringify({
       model: LLM_MODEL,
-      reasoning_effort: "minimal",
+      reasoning_effort: "medium",
       response_format: { type: "json_object" },
       messages: [{ role: "user", content: prompt }],
     }),
