@@ -233,15 +233,43 @@ function moonInfo(date = new Date()) {
   return { age, illum, phaseName: names[idx], major: [major1, major2] };
 }
 
+/* ---------- cache client-side 1h (localStorage) ---------- */
+// Cache theo từng user nên để ở trình duyệt là chuẩn nhất — không phụ thuộc
+// caches.default của Cloudflare (không đồng bộ giữa các colo nên hay miss).
+function clientCacheKey(lat, lon, gps, lang) {
+  const step = gps ? 0.27 : 0.02; // GPS: ~30km; tìm địa điểm: ~2km
+  const dec = step < 0.1 ? 2 : 1;
+  const r = (v) => (Math.round(v / step) * step).toFixed(dec);
+  return `fishing-v1|${r(lat)},${r(lon)}|${lang}`;
+}
+function readClientCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const j = JSON.parse(raw);
+    if (!j || Date.now() - j.ts > 3600000) { localStorage.removeItem(key); return null; }
+    return j.data;
+  } catch { return null; }
+}
+function writeClientCache(key, data) {
+  try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch { }
+}
+
 /* ---------- dự đoán ---------- */
 async function predict() {
   const scene = $("#scene-card"), factors = $("#factors-card");
   scene.classList.remove("hidden"); factors.classList.remove("hidden");
   scene.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  setVerdict(t("vLoadingT"), t("vLoadingS"), null);
-  startSonar(); // animation máy dò cá trong lúc chờ AI
-  $("#verdict").classList.add("is-loading");
-  startScanScore(); // số nhảy random + vòng sáng lên xuống trong lúc chờ
+
+  // cache client 1h: trúng thì dùng ngay, khỏi gọi AI
+  const ck = clientCacheKey(state.lat, state.lon, state.gps, LANG);
+  const cachedApi = readClientCache(ck);
+  if (!cachedApi) {
+    setVerdict(t("vLoadingT"), t("vLoadingS"), null);
+    startSonar(); // animation máy dò cá trong lúc chờ AI
+    $("#verdict").classList.add("is-loading");
+    startScanScore(); // đếm mượt ease-out lên ~98 trong lúc chờ
+  }
 
   let wx;
   try {
@@ -277,11 +305,14 @@ async function predict() {
     }
     return null;
   }
-  let api = null;
-  try {
-    api = await predictSync({ lat: state.lat, lon: state.lon, gps: state.gps, lang: LANG, weather: c,
-      moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) });
-  } catch { /* fallback demo */ }
+  let api = cachedApi || null;
+  if (!api) {
+    try {
+      api = await predictSync({ lat: state.lat, lon: state.lon, gps: state.gps, lang: LANG, weather: c,
+        moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) });
+    } catch { /* fallback demo */ }
+    if (api && !api.demo) writeClientCache(ck, api); // chỉ cache kết quả AI thật
+  }
 
   const data = api || demoScore(c, wx, moon, nowH);
   renderResult(data, c, moon);
