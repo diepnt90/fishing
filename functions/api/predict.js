@@ -69,6 +69,35 @@ function demoPredict(weather, moon) {
   };
 }
 
+/* Format số liệu KÈM ĐƠN VỊ cho AI — tránh AI đoán nhầm đơn vị (vd: km/h thành m/s) */
+function fmtWeather(w = {}) {
+  const dirs = ["Bắc", "Đông Bắc", "Đông", "Đông Nam", "Nam", "Tây Nam", "Tây", "Tây Bắc"];
+  const wd = w.wind_direction_10m;
+  const wdName = wd == null ? "?" : dirs[Math.round(wd / 45) % 8];
+  return [
+    `nhiệt độ ${w.temperature_2m ?? "?"}°C`,
+    `độ ẩm ${w.relative_humidity_2m ?? "?"}%`,
+    `áp suất ${w.pressure_msl ?? "?"} hPa`,
+    `mây ${w.cloud_cover ?? "?"}%`,
+    `gió ${w.wind_speed_10m ?? "?"} km/h, hướng ${wd ?? "?"}° (${wdName})`,
+    `mưa ${w.precipitation ?? "?"} mm`,
+    `mã thời tiết WMO ${w.weather_code ?? "?"}`,
+    w.is_day === 1 ? "đang là ban ngày" : w.is_day === 0 ? "đang là ban đêm" : "",
+  ].filter(Boolean).join("; ");
+}
+function fmtHistory(h) {
+  if (!h) return "(không có)";
+  const hh = (h.hours || []).map((x) =>
+    `${x.time}: ${x.temp}°C, ${x.pressure} hPa, gió ${x.wind} km/h, mây ${x.cloud}%, mưa ${x.precip} mm`).join(" | ");
+  const dd = (h.days || []).map((x) =>
+    `${x.label}: cao ${x.tmax}°C/thấp ${x.tmin}°C, mưa ${x.precip} mm, ${x.wmo}`).join(" | ");
+  return `5 giờ gần nhất: ${hh} \n5 ngày qua: ${dd}`;
+}
+function fmtMoon(moon = {}) {
+  const pct = Math.round((moon.illum ?? 0) * 100);
+  return `${moon.phase || "?"} (độ sáng ${pct}%)`;
+}
+
 async function llmPredict(env, origin, { weather, moon, history, lat, lon }) {
   let skill = "";
   try {
@@ -82,11 +111,13 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon }) {
     "## KINH NGHIỆM (chỉ ghi những điều không hiển nhiên, đừng dùng kiến thức phổ thông)",
     skill || "(chưa có)",
     "",
-    "## SỐ LIỆU HIỆN TẠI",
+    "## SỐ LIỆU HIỆN TẠI (đơn vị đã ghi rõ — giữ nguyên đơn vị khi trả về chips)",
     `Vị trí: ${lat}, ${lon} (Việt Nam)`,
-    `Thời tiết lúc này: ${JSON.stringify(weather)}`,
-    `Mặt trăng & giờ solunar: ${JSON.stringify(moon)}`,
-    `Lịch sử (5 giờ gần nhất + 5 ngày qua) — dùng để đánh giá XU HƯỚNG: ${JSON.stringify(history)}`,
+    `Thời tiết lúc này: ${fmtWeather(weather)}.`,
+    `Mặt trăng: ${fmtMoon(moon)}.`,
+    "Lịch sử — dùng để đánh giá XU HƯỚNG (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...):",
+    fmtHistory(history),
+    "Lưu ý: số liệu gió là của model dự báo ở độ cao 10m (có thể mạnh hơn gió thực tế mặt đất trong khu dân cư).",
     "",
     "## YÊU CẦU",
     "Dự đoán NGAY LÚC NÀY cá có đi ăn không. Chỉ trả về JSON thuần (không markdown, không giải thích thêm):",
