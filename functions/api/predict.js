@@ -10,7 +10,7 @@
 export async function onRequestPost({ request, env }) {
   let body = {};
   try { body = await request.json(); } catch { /* bỏ qua */ }
-  const { weather = {}, moon = {} } = body;
+  const { weather = {}, moon = {}, history = null } = body;
 
   // ---- TODO: thay bằng fetch tới LLM ----
   // Đọc skill kiến thức câu cá (file public/skills/kinh-nghiem-cau-ca.md,
@@ -24,7 +24,8 @@ export async function onRequestPost({ request, env }) {
   //   "  chips: [{k,v,d,cls}],",
   //   "  depth (0=mặt, 1=lửng, 2=đáy): tầng nước cá đang ăn, dựa vào mục 10 của kinh nghiệm. }.",
   //   "--- KINH NGHIỆM ---", skill,
-  //   "--- SỐ LIỆU ---", JSON.stringify({ weather, moon, lat: body.lat, lon: body.lon }),
+  //   "--- SỐ LIỆU ---", JSON.stringify({ weather, moon, history, lat: body.lat, lon: body.lon }),
+  //   "(history gồm 5 giờ gần nhất + 5 ngày qua — dùng để đánh giá xu hướng thời tiết)",
   // ].join("\n");
   // const ai = await fetch("https://api.openai.com/v1/chat/completions", {
   //   method: "POST",

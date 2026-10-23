@@ -4,6 +4,9 @@
 const $ = (s) => document.querySelector(s);
 const state = { lat: null, lon: null, name: "", animId: null };
 
+/* mã thời tiết WMO → tiếng Việt */
+const WMO_DESC = {0:"Quang đãng",1:"Chủ yếu quang đãng",2:"Mây rải rác",3:"Âm u",45:"Sương mù",48:"Sương mù đóng băng",51:"Mưa phùn nhẹ",53:"Mưa phùn",55:"Mưa phùn dày",56:"Mưa phùn đóng băng",57:"Mưa phùn đóng băng",61:"Mưa nhẹ",63:"Mưa vừa",65:"Mưa to",66:"Mưa đóng băng",67:"Mưa đóng băng",71:"Tuyết nhẹ",73:"Tuyết",75:"Tuyết dày",77:"Tuyết hạt",80:"Mưa rào nhẹ",81:"Mưa rào vừa",82:"Mưa rào to",85:"Mưa tuyết",86:"Mưa tuyết",95:"Dông",96:"Dông kèm mưa đá",99:"Dông kèm mưa đá"};
+
 /* ---------- tabs ---------- */
 document.querySelectorAll(".seg-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -27,6 +30,7 @@ $("#change-place").addEventListener("click", () => {
   $("#chosen-place").classList.add("hidden");
   $("#scene-card").classList.add("hidden");
   $("#factors-card").classList.add("hidden");
+  $("#history-card").classList.add("hidden");
   stopSea();
 });
 
@@ -108,7 +112,9 @@ async function predict() {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}` +
       `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,precipitation,is_day` +
-      `&hourly=pressure_msl&daily=sunrise,sunset&timezone=auto&forecast_days=1`
+      `&hourly=temperature_2m,pressure_msl,cloud_cover,wind_speed_10m,precipitation` +
+      `&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code` +
+      `&timezone=auto&forecast_days=1&past_days=5`
     );
     wx = await r.json();
   } catch { setVerdict("Lỗi mạng", "Không tải được thời tiết, thử lại nhé.", 0); return; }
@@ -123,7 +129,7 @@ async function predict() {
     const r = await fetch("/api/predict", {
       method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
       body: JSON.stringify({ lat: state.lat, lon: state.lon, weather: c,
-        moon: { illum: moon.illum, phase: moon.phaseName } })
+        moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) })
     });
     clearTimeout(t);
     if (r.ok) api = await r.json();
@@ -131,6 +137,7 @@ async function predict() {
 
   const data = api || demoScore(c, wx, moon, nowH);
   renderResult(data, c, moon);
+  renderHistory(wx);
   const hp = wx.hourly?.pressure_msl || [];
   const trend = hp.length > 3 ? hp[hp.length - 1] - hp[hp.length - 4] : 0;
   const toH = (iso) => { const d = new Date(iso); return d.getHours() + d.getMinutes() / 60; };
@@ -179,10 +186,8 @@ function demoScore(c, wx, moon, nowH) {
   const clPts = cl >= 20 && cl <= 60 ? 10 : cl < 20 ? 6 : cl <= 90 ? 7 : 4; s += clPts;
   chips.push({ k: "Mây", v: `${cl}%`, d: cl >= 20 && cl <= 60 ? "Âm u nhẹ, cá dạn hơn" : cl < 20 ? (isDay ? "Nắng gắt" : "Trời quang") : "Nhiều mây", cls: clPts >= 8 ? "good" : "warn" });
 
-  // mưa: hiển thị + mô tả từ mã thời tiết (chưa chấm điểm ở demo — LLM sẽ cân nhắc khi cắm AI thật)
-  const wmoDesc = {0:"Quang đãng",1:"Chủ yếu quang đãng",2:"Mây rải rác",3:"Âm u",45:"Sương mù",48:"Sương mù đóng băng",51:"Mưa phùn nhẹ",53:"Mưa phùn",55:"Mưa phùn dày",56:"Mưa phùn đóng băng",57:"Mưa phùn đóng băng",61:"Mưa nhẹ",63:"Mưa vừa",65:"Mưa to",66:"Mưa đóng băng",67:"Mưa đóng băng",71:"Tuyết nhẹ",73:"Tuyết",75:"Tuyết dày",77:"Tuyết hạt",80:"Mưa rào nhẹ",81:"Mưa rào vừa",82:"Mưa rào to",85:"Mưa tuyết",86:"Mưa tuyết",95:"Dông",96:"Dông kèm mưa đá",99:"Dông kèm mưa đá"};
   const pr = c.precipitation ?? 0;
-  const wmo = wmoDesc[c.weather_code] ?? "";
+  const wmo = WMO_DESC[c.weather_code] ?? "";
   chips.push({ k: "Mưa", v: pr > 0 ? `${pr} mm` : "Không mưa",
     d: pr > 0 && pr <= 2.5 ? `${wmo} — kích thích cá ăn` : pr > 2.5 ? `${wmo} — nước đục, kém ăn` : (wmo || "Trời khô ráo"),
     cls: pr > 0 && pr <= 2.5 ? "good" : pr > 2.5 ? "bad" : "" });
@@ -230,6 +235,55 @@ function setVerdict(title, sub, score) {
   const el = $("#verdict-title");
   el.style.color = score == null ? "var(--ink)" : score >= 75 ? "var(--glow)" : score >= 55 ? "var(--lime)" : score >= 30 ? "var(--amber)" : "var(--coral)";
   el.style.textShadow = `0 0 34px ${score == null ? "transparent" : score >= 75 ? "rgba(62,230,196,.55)" : score >= 55 ? "rgba(163,230,53,.45)" : score >= 30 ? "rgba(245,185,66,.45)" : "rgba(255,107,107,.45)"}`;
+}
+
+/* ---------- lịch sử: 5 giờ gần nhất + 5 ngày qua ---------- */
+function historyData(wx) {
+  const times = wx.hourly.time;
+  let idx = times.findIndex((t) => t.slice(0, 13) === wx.current.time.slice(0, 13));
+  if (idx < 0) idx = times.length - 1;
+  const hours = [];
+  for (let i = Math.max(0, idx - 4); i <= idx; i++) {
+    hours.push({
+      time: times[i].slice(11, 16),
+      temp: Math.round(wx.hourly.temperature_2m[i]),
+      pressure: Math.round(wx.hourly.pressure_msl[i]),
+      wind: Math.round(wx.hourly.wind_speed_10m[i]),
+      cloud: wx.hourly.cloud_cover[i],
+      precip: +wx.hourly.precipitation[i].toFixed(1),
+    });
+  }
+  const days = [];
+  const n = wx.daily.time.length;
+  for (let i = Math.max(0, n - 6); i < n - 1; i++) { // 5 ngày trước, không tính hôm nay
+    const d = new Date(wx.daily.time[i] + "T00:00:00");
+    days.push({
+      label: `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`,
+      tmax: Math.round(wx.daily.temperature_2m_max[i]),
+      tmin: Math.round(wx.daily.temperature_2m_min[i]),
+      precip: +wx.daily.precipitation_sum[i].toFixed(1),
+      wmo: WMO_DESC[wx.daily.weather_code[i]] || "—",
+    });
+  }
+  return { hours, days };
+}
+
+function renderHistory(wx) {
+  const { hours, days } = historyData(wx);
+  const card = $("#history-card");
+  card.classList.remove("hidden");
+  $("#hist-hours").innerHTML =
+    "<thead><tr><th>Giờ</th><th>Nhiệt</th><th>Áp suất</th><th>Gió</th><th>Mây</th><th>Mưa</th></tr></thead><tbody>" +
+    hours.map((h) =>
+      `<tr><td>${h.time}</td><td>${h.temp}°C</td><td>${h.pressure} hPa</td>` +
+      `<td>${h.wind} km/h</td><td>${h.cloud}%</td><td>${h.precip > 0 ? h.precip + " mm" : "—"}</td></tr>`
+    ).join("") + "</tbody>";
+  $("#hist-days").innerHTML =
+    "<thead><tr><th>Ngày</th><th>Cao/Thấp</th><th>Mưa</th><th>Thời tiết</th></tr></thead><tbody>" +
+    days.map((d) =>
+      `<tr><td>${d.label}</td><td>${d.tmax}° / ${d.tmin}°</td>` +
+      `<td>${d.precip > 0 ? d.precip + " mm" : "—"}</td><td>${escapeHtml(d.wmo)}</td></tr>`
+    ).join("") + "</tbody>";
 }
 
 /* ---------- tầng nước cá ăn từ thời tiết (0=mặt, 1=lửng, 2=đáy) ----------
