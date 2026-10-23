@@ -41,3 +41,11 @@ Web này phục vụ câu các loài cá tầng đáy ở ao/hồ/sông Việt N
 - **Quy luật:** Cá rô phi: ưu tiên thử tầng đáy hoặc sát đáy khi nước mát; khi nước ấm, kiểm tra cả tầng giữa và vùng nông có thức ăn. | **Nguồn:** Điệp (tổng hợp kinh nghiệm) | **Độ tin cậy:** cao
 - **Quy luật:** Mồi có tín hiệu khi đang chìm nhưng mất tín hiệu khi chạm đáy: tăng khả năng cá đang ăn lửng; thử thay đổi độ cao mồi theo từng nấc. | **Nguồn:** Điệp (tổng hợp kinh nghiệm) | **Độ tin cậy:** cao
 - **Quy luật:** Cá nổi đầu nhưng không đớp mồi: nghi ngờ thiếu oxy hoặc điều kiện nước bất lợi; ưu tiên tìm vùng nước thông thoáng thay vì chỉ đổi sang câu tầng mặt. | **Nguồn:** Điệp (tổng hợp kinh nghiệm) | **Độ tin cậy:** cao
+- **Quy luật:** Chênh lệch nhiệt độ ngày–đêm ít hơn 8 độ trong vài ngày gần đây → cá đi ăn mạnh. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Có mưa nhẹ rồi hửng nắng nhẹ → cá ăn mạnh. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Ngày trước khi không khí lạnh về → cá ăn mạnh (tranh thủ ăn trước đợt lạnh). | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Hôm trước nắng nóng, hôm sau mát hơn (nhiệt cao nhất không quá 36°C) và có gió → cá ăn mạnh. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Hôm trước và hôm sau đều nhiều mây, nắng nhẹ, mát mẻ → cá ăn mạnh. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Hôm trước nắng nóng, hôm sau âm u kèm gió to → cá giảm ăn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Hôm trước có không khí lạnh về → hôm sau cá không ăn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Hôm trước mưa cả ngày, hôm sau mưa giảm/tạnh hoặc nổi gió mạnh → cá không ăn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
