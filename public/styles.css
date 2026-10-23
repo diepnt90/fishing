@@ -53,15 +53,15 @@ body {
 .brand h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -.01em; }
 .brand p { font-size: .82rem; color: var(--muted); }
 .lang-btn {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 10px;
   background: rgba(62,230,196,.08);
   border: 1px solid rgba(62,230,196,.35); border-radius: 999px;
-  padding: 6px 10px; cursor: pointer; flex-shrink: 0;
+  padding: 8px 12px; cursor: pointer; flex-shrink: 0;
   transition: background .2s, box-shadow .2s;
 }
 .lang-btn:hover { background: rgba(62,230,196,.16); box-shadow: 0 0 14px rgba(62,230,196,.25); }
 .lang-btn .flag {
-  display: block; width: 26px; height: 18px; border-radius: 3px; overflow: hidden;
+  display: block; width: 38px; height: 27px; border-radius: 4px; overflow: hidden;
   opacity: .35; filter: grayscale(.7);
   transition: opacity .2s, filter .2s, transform .2s, box-shadow .2s;
 }
