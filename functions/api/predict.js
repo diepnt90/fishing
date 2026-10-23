@@ -187,12 +187,19 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "- Low oxygen (≥30°C AND wind ≤5 km/h): score MAX 40. Mid-water feeding then is a BAD sign, never positive.",
     "- For these 5 bottom feeders: depth=1 (mid-water) is always a bad sign, penalize heavily.",
     "",
-    "### Step 5: Floor 0, round to integer",
+    "### Step 5: Floor 0, round to integer → this is rule_score",
+    "",
+    "### Step 6: Cross-check with AI's own experience",
+    "Now INDEPENDENTLY assess using your own fishing expertise (set aside the rules above): with this weather data, would fish bite? Give ai_score (0–100) and 1 sentence of reasoning (ai_reason).",
+    "Compare rule_score with ai_score: if diff ≤15 → score = average, high confidence. If diff >15 → briefly explain in ai_reason why they differ, then finalize score following whichever you trust more for this specific situation.",
     "",
     "## REQUIREMENTS",
     "Predict RIGHT NOW whether fish are biting. Return pure JSON only (no markdown, no extra explanation):",
     "{",
-    '  "score": number 0-100 (higher = more worth going fishing),',
+    '  "score": final number 0-100 (synthesized),',
+    '  "rule_score": rule-based score (Steps 2–5),',
+    '  "ai_score": "independent AI judgment score (Step 6)",',
+    '  "ai_reason": "1 sentence reason for ai_score (and why it differs if >15 from rule_score)"',
     '  "title": "short band title (system normalizes it — just put a placeholder)",',
     '  "sub": "1-2 short sentences of explanation, max 2",',
     '  "factors": [',
@@ -250,12 +257,19 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "- Thiếu oxy (≥30°C VÀ gió ≤5 km/h): điểm TỐI ĐA 40. Cá ăn lửng lúc này là tín hiệu XẤU, cấm diễn giải tích cực.",
     "- Với 5 loài cá đáy: depth=1 (ăn lửng) luôn là tín hiệu xấu, phải trừ điểm mạnh.",
     "",
-    "### Bước 5: Sàn 0, làm tròn số nguyên",
+    "### Bước 5: Sàn 0, làm tròn số nguyên → đây là rule_score",
+    "",
+    "### Bước 6: Đối chứng với kinh nghiệm của chính AI",
+    "Bây giờ ĐỘC LẬP đánh giá bằng kinh nghiệm câu cá của bạn (tạm bỏ qua các quy tắc trên): với bộ số liệu thời tiết này, theo hiểu biết của bạn thì cá có ăn không? Cho ai_score (0–100) và 1 câu lý do (ai_reason).",
+    "So sánh rule_score với ai_score: nếu chênh ≤15 → score = trung bình cộng, độ tin cậy cao. Nếu chênh >15 → giải thích ngắn trong ai_reason vì sao lệch, rồi chốt score theo bên mà bạn tin hơn trong tình huống cụ thể này.",
     "",
     "## YÊU CẦU",
     "Dự đoán NGAY LÚC NÀY cá có đi ăn không. Chỉ trả về JSON thuần (không markdown, không giải thích thêm):",
     "{",
-    '  "score": số 0-100 (càng cao càng nên đi câu),',
+    '  "score": số 0-100 cuối cùng (tổng hợp),',
+    '  "rule_score": điểm theo luật (Bước 2–5),',
+    '  "ai_score": điểm theo kinh nghiệm AI (Bước 6),',
+    '  "ai_reason": "1 câu lý do cho ai_score (và giải thích nếu chênh rule_score >15)",',
     '  "title": "tiêu đề ngắn theo band điểm (hệ thống tự chuẩn hoá — cứ để tạm)",',
     '  "sub": "1-2 câu giải thích ngắn gọn, tối đa 2 câu",',
     '  "factors": [',
@@ -318,8 +332,13 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
     d: String(x.d ?? ""), pts: Math.max(-100, Math.min(100, Math.round(+x.pts || 0))),
   })) : [];
   const depth = [0, 1, 2].includes(v.depth) ? v.depth : 1;
+  const ruleScore = Math.max(0, Math.min(100, Math.round(+v.rule_score)));
+  const aiScore = Math.max(0, Math.min(100, Math.round(+v.ai_score)));
 
-  return { score, title, sub: String(v.sub || ""), chips, factors, penalties, depth, demo: false };
+  return { score, title, sub: String(v.sub || ""), chips, factors, penalties, depth, demo: false,
+    ruleScore: Number.isFinite(ruleScore) ? ruleScore : null,
+    aiScore: Number.isFinite(aiScore) ? aiScore : null,
+    aiReason: String(v.ai_reason || "") };
 }
 
 /* ---------- đối chứng 3 nguồn thời tiết ---------- */
