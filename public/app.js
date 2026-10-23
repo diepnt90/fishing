@@ -146,7 +146,8 @@ async function predict() {
   startSea(data.score, data.depth ?? feedingDepth(c, trend, nearGolden, nowH));
   $("#ai-note-text").textContent = api && !api.demo
     ? "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế."
-    : "Đang ở chế độ demo: điểm số tính bằng thuật toán thử nghiệm. Bản chính thức sẽ gửi dữ liệu này lên LLM để phân tích.";
+    : "Đang ở chế độ demo: điểm số tính bằng thuật toán thử nghiệm. Bản chính thức sẽ gửi dữ liệu này lên LLM để phân tích."
+      + (api && api.llmError ? ` (mã lỗi AI: ${api.llmError})` : "");
   const badge = document.querySelector(".demo-badge");
   if (badge) badge.style.display = (api && !api.demo) ? "none" : "";
 }

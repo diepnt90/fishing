@@ -133,14 +133,22 @@ export async function onRequestPost({ request, env }) {
   }
 
   let payload = null;
-  if (env.LLM_API_KEY) {
+  let llmError = null;
+  if (!env.LLM_API_KEY) {
+    llmError = "no_key";
+  } else {
     try {
       payload = await llmPredict(env, request, { weather, moon, history, lat, lon });
     } catch (e) {
+      const m = /LLM HTTP (\d+)/.exec(e.message || "");
+      llmError = m ? `http_${m[1]}` : "llm_error";
       console.log("LLM failed, fallback demo:", e.message);
     }
   }
-  if (!payload) payload = demoPredict(weather, moon);
+  if (!payload) {
+    payload = demoPredict(weather, moon);
+    if (llmError) payload.llmError = llmError; // debug lúc testing, không lộ key
+  }
 
   if (CACHE_ENABLED) {
     try {
