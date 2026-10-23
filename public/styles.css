@@ -58,6 +58,7 @@ body {
 }
 
 main { max-width: 860px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px) 40px; display: grid; gap: 20px; }
+main > * { min-width: 0; } /* cho phép card co nhỏ hơn nội dung (bảng 480px) trên mobile */
 
 .card {
   background: var(--card);
@@ -185,7 +186,7 @@ main { max-width: 860px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px) 40px;
 
 .hist-title { font-size: .85rem; font-weight: 700; color: var(--glow); margin: 14px 0 8px; letter-spacing: .02em; }
 .hist-title:first-of-type { margin-top: 0; }
-.hist-scroll { overflow-x: auto; border-radius: 12px; border: 1px solid var(--card-border); }
+.hist-scroll { overflow-x: auto; max-width: 100%; border-radius: 12px; border: 1px solid var(--card-border); -webkit-overflow-scrolling: touch; }
 .hist-table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 480px; }
 .hist-table th, .hist-table td { padding: 9px 12px; text-align: center; white-space: nowrap; }
 .hist-table thead th {
