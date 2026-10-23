@@ -125,7 +125,7 @@ async function predict() {
   // thử gọi API dự đoán (Cloudflare Function); lỗi thì dùng thuật toán demo tại chỗ
   let api = null;
   try {
-    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 4000);
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 15000);
     const r = await fetch("/api/predict", {
       method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
       body: JSON.stringify({ lat: state.lat, lon: state.lon, gps: state.gps, weather: c,
@@ -143,10 +143,12 @@ async function predict() {
   const toH = (iso) => { const d = new Date(iso); return d.getHours() + d.getMinutes() / 60; };
   const sr = toH(wx.daily.sunrise[0]), ss = toH(wx.daily.sunset[0]);
   const nearGolden = Math.abs(nowH - sr) < 1 || Math.abs(nowH - ss) < 1;
-  startSea(data.score, feedingDepth(c, trend, nearGolden, nowH));
+  startSea(data.score, data.depth ?? feedingDepth(c, trend, nearGolden, nowH));
   $("#ai-note-text").textContent = api && !api.demo
     ? "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế."
     : "Đang ở chế độ demo: điểm số tính bằng thuật toán thử nghiệm. Bản chính thức sẽ gửi dữ liệu này lên LLM để phân tích.";
+  const badge = document.querySelector(".demo-badge");
+  if (badge) badge.style.display = (api && !api.demo) ? "none" : "";
 }
 
 /* thuật toán demo — sẽ thay bằng LLM */
