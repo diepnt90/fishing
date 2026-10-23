@@ -2,7 +2,7 @@
 "use strict";
 
 const $ = (s) => document.querySelector(s);
-const state = { lat: null, lon: null, name: "", animId: null };
+const state = { lat: null, lon: null, name: "", animId: null, scanId: null };
 
 /* ---------- song ngữ VI/EN ---------- */
 let LANG = "vi";
@@ -240,8 +240,7 @@ async function predict() {
   setVerdict(t("vLoadingT"), t("vLoadingS"), null);
   startSonar(); // animation máy dò cá trong lúc chờ AI
   $("#verdict").classList.add("is-loading");
-  $("#score").textContent = "–";
-  $("#gauge-arc").style.strokeDashoffset = 251.4;
+  startScanScore(); // số nhảy random + vòng sáng lên xuống trong lúc chờ
 
   let wx;
   try {
@@ -253,7 +252,7 @@ async function predict() {
       `&timezone=auto&forecast_days=1&past_days=5`
     );
     wx = await r.json();
-  } catch { setVerdict(t("vNetErrT"), t("vNetErrS"), 0); stopSea(); $("#verdict").classList.remove("is-loading"); return; }
+  } catch { setVerdict(t("vNetErrT"), t("vNetErrS"), 0); stopSea(); stopScanScore(); $("#score").textContent = "–"; $("#gauge-arc").style.strokeDashoffset = 251.4; $("#verdict").classList.remove("is-loading"); return; }
 
   const c = wx.current, moon = moonInfo();
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
@@ -378,6 +377,7 @@ function demoScore(c, wx, moon, nowH) {
 
 function renderResult(data, c, moon) {
   $("#verdict").classList.remove("is-loading");
+  stopScanScore();
   animateScore(data.score);
   setVerdict(data.title, data.sub, data.score);
   const box = $("#chips"); box.innerHTML = "";
@@ -485,6 +485,34 @@ function animateScore(target) {
     if (k < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
+}
+
+/* ---------- số nhảy random + vòng đồng hồ sáng lên xuống lúc chờ AI ---------- */
+function stopScanScore() {
+  if (state.scanId) cancelAnimationFrame(state.scanId);
+  state.scanId = null;
+  const arc = $("#gauge-arc");
+  arc.style.opacity = ""; arc.style.filter = "";
+}
+function startScanScore() {
+  stopScanScore();
+  const arc = $("#gauge-arc"), num = $("#score"), len = 251.4;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    num.textContent = "–"; arc.style.strokeDashoffset = len; return;
+  }
+  let val = 0, target = 10 + Math.random() * 80, lastSwitch = 0;
+  function frame(t) {
+    if (t - lastSwitch > 280) { target = 5 + Math.random() * 90; lastSwitch = t; }
+    val += (target - val) * 0.35;
+    const v = Math.round(val);
+    num.textContent = v;
+    arc.style.strokeDashoffset = len * (1 - v / 100);
+    const pulse = Math.abs(Math.sin(t / 380));   // 0..1: sáng lên xuống
+    arc.style.opacity = (0.45 + 0.55 * pulse).toFixed(2);
+    arc.style.filter = "drop-shadow(0 0 " + Math.round(3 + 9 * pulse) + "px rgba(62,230,196,.75))";
+    state.scanId = requestAnimationFrame(frame);
+  }
+  state.scanId = requestAnimationFrame(frame);
 }
 
 /* ---------- đàn cá canvas ----------
