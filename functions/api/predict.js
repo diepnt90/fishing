@@ -7,6 +7,9 @@
  * API key của LLM và các nguồn thời tiết đặt trong biến môi trường Cloudflare (không commit).
  */
 
+/* Bật/tắt cache — đang testing thì để false, xong bật lại true */
+const CACHE_ENABLED = false;
+
 /* Cache kết quả 1 giờ:
    - chọn điểm bằng tìm tên → cùng địa điểm (lưới 0.02° ≈ 2km)
    - chọn "vị trí của tôi" (GPS) → cùng vùng bán kính ~50km (lưới 0.45°)
@@ -28,10 +31,12 @@ export async function onRequestPost({ request, env }) {
   const cache = caches.default;
   const cacheReq = new Request(
     `https://cache.local/api/predict?k=${encodeURIComponent(cacheGrid(lat, lon, gps))}`);
-  try {
-    const hit = await cache.match(cacheReq);
-    if (hit) return Response.json({ ...(await hit.json()), cached: true });
-  } catch { /* cache lỗi thì tính lại */ }
+  if (CACHE_ENABLED) {
+    try {
+      const hit = await cache.match(cacheReq);
+      if (hit) return Response.json({ ...(await hit.json()), cached: true });
+    } catch { /* cache lỗi thì tính lại */ }
+  }
 
   // ---- TODO: thay bằng fetch tới LLM ----
   // Đọc skill kiến thức câu cá (file public/skills/kinh-nghiem-cau-ca.md,
@@ -95,10 +100,12 @@ export async function onRequestPost({ request, env }) {
   };
 
   // ---- lưu cache 1 giờ ----
-  try {
-    await cache.put(cacheReq, new Response(JSON.stringify(payload), {
-      headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" },
-    }));
-  } catch { /* bỏ qua */ }
+  if (CACHE_ENABLED) {
+    try {
+      await cache.put(cacheReq, new Response(JSON.stringify(payload), {
+        headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" },
+      }));
+    } catch { /* bỏ qua */ }
+  }
   return Response.json(payload);
 }
