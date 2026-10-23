@@ -98,7 +98,7 @@ function fmtMoon(moon = {}) {
   return `${moon.phase || "?"} (độ sáng ${pct}%)`;
 }
 
-async function llmPredict(env, origin, { weather, moon, history, lat, lon }) {
+async function llmPredict(env, origin, { weather, moon, history, lat, lon, crossCheck }) {
   let skill = "";
   try {
     const sr = await fetch(`${origin}/skills/kinh-nghiem-cau-ca.md`);
@@ -118,6 +118,10 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon }) {
     "Lịch sử — dùng để đánh giá XU HƯỚNG (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...):",
     fmtHistory(history),
     "Lưu ý: số liệu gió là của model dự báo ở độ cao 10m (có thể mạnh hơn gió thực tế mặt đất trong khu dân cư).",
+    "",
+    "## ĐỐI CHỨNG 3 NGUỒN THỜI TIẾT",
+    crossCheck || "(chưa có dữ liệu đối chứng)",
+    "Hãy cân nhắc độ đồng thuận/mâu thuẫn giữa các nguồn khi kết luận. Nếu mâu thuẫn mạnh, nêu rõ trong phần sub.",
     "",
     "## YÊU CẦU",
     "Dự đoán NGAY LÚC NÀY cá có đi ăn không. Chỉ trả về JSON thuần (không markdown, không giải thích thêm):",
@@ -159,12 +163,84 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon }) {
   return { score, title: String(v.title || ""), sub: String(v.sub || ""), chips, depth, demo: false };
 }
 
+/* ---------- đối chứng 3 nguồn thời tiết ---------- */
+async function fetchExtraSources(env, lat, lon) {
+  const out = { weatherapi: null, openweather: null };
+  const jobs = [];
+  if (env.WEATHERAPI_KEY) {
+    jobs.push((async () => {
+      try {
+        const r = await fetch(
+          `https://api.weatherapi.com/v1/current.json?key=${env.WEATHERAPI_KEY}&q=${lat},${lon}&aqi=no`,
+          { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) return;
+        const j = await r.json();
+        const c = j.current || {};
+        out.weatherapi = {
+          temp: c.temp_c, humidity: c.humidity, pressure: c.pressure_mb,
+          wind: c.wind_kph, windDeg: c.wind_degree, cloud: c.cloud,
+          precip: c.precip_mm, desc: c.condition && c.condition.text,
+        };
+      } catch { /* bỏ qua nguồn lỗi */ }
+    })());
+  }
+  if (env.OPENWEATHER_KEY) {
+    jobs.push((async () => {
+      try {
+        const r = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${env.OPENWEATHER_KEY}&units=metric&lang=vi`,
+          { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) return;
+        const j = await r.json();
+        out.openweather = {
+          temp: j.main && j.main.temp, humidity: j.main && j.main.humidity,
+          pressure: j.main && j.main.pressure,
+          wind: j.wind && j.wind.speed != null ? Math.round(j.wind.speed * 3.6 * 10) / 10 : null,
+          windDeg: j.wind && j.wind.deg, cloud: j.clouds && j.clouds.all,
+          precip: j.rain && (j.rain["1h"] || 0),
+          desc: j.weather && j.weather[0] && j.weather[0].description,
+        };
+      } catch { /* bỏ qua nguồn lỗi */ }
+    })());
+  }
+  await Promise.all(jobs);
+  return out;
+}
+
+function crossCheckText(omW, extra) {
+  const om = { name: "Open-Meteo", temp: omW.temperature_2m, humidity: omW.relative_humidity_2m,
+    pressure: omW.pressure_msl, wind: omW.wind_speed_10m, cloud: omW.cloud_cover, precip: omW.precipitation };
+  const srcs = [om];
+  if (extra.weatherapi) srcs.push({ name: "WeatherAPI", ...extra.weatherapi });
+  if (extra.openweather) srcs.push({ name: "OpenWeather", ...extra.openweather });
+  if (srcs.length < 2) return "(chỉ có 1 nguồn khả dụng — chưa đối chứng được)";
+  const vals = (k) => srcs.map((s) => s[k]).filter((v) => v != null);
+  const spread = (arr) => (arr.length ? Math.max(...arr) - Math.min(...arr) : 0);
+  const fmt = (k, unit, rd = 1) =>
+    srcs.map((s) => `${s.name} ${s[k] == null ? "?" : (+s[k]).toFixed(rd)}`).join(" · ") + ` ${unit}`;
+  const tS = spread(vals("temp")), pS = spread(vals("pressure")),
+        wS = spread(vals("wind")), rS = spread(vals("precip"));
+  const lines = [
+    `Nhiệt độ: ${fmt("temp", "°C")} → ${tS <= 2 ? "đồng thuận" : tS <= 4 ? "chênh lệch vừa" : "MÂU THUẪN"}`,
+    `Áp suất: ${fmt("pressure", "hPa", 0)} → ${pS <= 2 ? "đồng thuận" : pS <= 4 ? "chênh lệch vừa" : "MÂU THUẪN"}`,
+    `Gió: ${fmt("wind", "km/h")} → ${wS <= 5 ? "đồng thuận" : wS <= 10 ? "chênh lệch vừa" : "MÂU THUẪN"}`,
+    `Mưa: ${fmt("precip", "mm")} → ${rS <= 1 ? "đồng thuận" : "chênh lệch"}`,
+  ];
+  lines.push((tS > 4 || pS > 4 || wS > 10)
+    ? "⚠️ CẢNH BÁO: các nguồn mâu thuẫn mạnh — hãy thận trọng, giảm độ tin cậy của kết luận."
+    : "Các nguồn nhìn chung đồng thuận — dữ liệu đáng tin.");
+  return lines.join("\n");
+}
+
 /* chạy nền: gọi LLM rồi cất kết quả vào cache để poll đọc */
 async function runJob(env, origin, jid, input) {
   let result;
   try {
     if (!env.LLM_API_KEY) throw new Error("LLM HTTP no_key");
-    result = await llmPredict(env, origin, input);
+    const extra = await fetchExtraSources(env, input.lat, input.lon);
+    const checkText = crossCheckText(input.weather, extra);
+    result = await llmPredict(env, origin, { ...input, crossCheck: checkText });
+    result.sources = checkText;
   } catch (e) {
     const m = /LLM HTTP ([\w_]+)/.exec(e.message || "");
     const fb = demoPredict(input.weather, input.moon);
