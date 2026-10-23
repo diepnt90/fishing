@@ -51,4 +51,4 @@ Web này phục vụ câu các loài cá tầng đáy ở ao/hồ/sông Việt N
 - **Quy luật:** Hôm trước mưa cả ngày, hôm sau mưa giảm/tạnh hoặc nổi gió mạnh → cá không ăn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
 - **Quy luật:** Độ ẩm trên 85% → cá ăn yếu; ngược lại độ ẩm thấp thì cá ăn mạnh hơn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
 - **Quy luật:** Áp suất trên 1020 hPa → cá ăn mạnh; áp suất dưới 1000 hPa → cá không ăn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
-- **Quy luật:** Gió hướng Đông Nam thì cá ăn mạnh. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Gió Đông Nam hoặc Nam thì cá ăn mạnh; ngược lại gió Bắc, Tây, Đông Bắc xuất hiện đột ngột thì cá ăn chậm hoặc không ăn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
