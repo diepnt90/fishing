@@ -445,7 +445,7 @@ function feedingDepth(c, trend, nearGolden, nowH) {
   if (nearGolden) d -= 0.5;
   // Thiếu oxy (kinh nghiệm thực tế của Điệp): trời oi nóng + lặng gió → oxy hòa tan
   // thấp, cá (kể cả cá đáy) nổi lên tầng lửng/mặt để hớp oxy
-  if (t >= 30 && w < 10) d -= 0.5;
+  if (t >= 30 && w <= 5) d -= 0.5;
   return Math.max(0, Math.min(2, d));
 }
 
