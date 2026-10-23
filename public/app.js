@@ -24,6 +24,7 @@ vi: {
   histNote: "AI dùng lịch sử này để đánh giá xu hướng (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...).",
   footer: "Dữ liệu thời tiết: Open-Meteo · Pha trăng & giờ solunar tính tại chỗ",
   searching: "Đang tìm…", noResult: "Không tìm thấy, thử tên khác nhé", netErr: "Lỗi mạng, thử lại nhé",
+  resolving: "Đang lấy tọa độ…", noKey: "Chưa cấu hình key Vietmap (secret VIETMAP_KEY).",
   noGeo: "Thiết bị không hỗ trợ định vị.", gettingPos: "Đang lấy vị trí…",
   posDenied: "Không lấy được vị trí — bạn đã từ chối quyền hoặc GPS yếu.",
   myPos: (la, lo) => `Vị trí hiện tại (${la.toFixed(3)}, ${lo.toFixed(3)})`,
@@ -64,6 +65,7 @@ en: {
   histNote: "The AI uses this history to judge trends (pressure falling or rising, temperature up/down…).",
   footer: "Weather data: Open-Meteo · Moon phase & solunar times computed on-device",
   searching: "Searching…", noResult: "Not found, try another name", netErr: "Network error, try again",
+  resolving: "Resolving location…", noKey: "Vietmap key not configured (secret VIETMAP_KEY).",
   noGeo: "Geolocation not supported on this device.", gettingPos: "Getting location…",
   posDenied: "Couldn't get location — permission denied or weak GPS.",
   myPos: (la, lo) => `Current location (${la.toFixed(3)}, ${lo.toFixed(3)})`,
@@ -157,16 +159,29 @@ async function doSearch(q) {
   const box = $("#search-results");
   box.innerHTML = `<li><button disabled>${escapeHtml(t("searching"))}</button></li>`;
   try {
-    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=${LANG}&format=json`);
+    const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
     const j = await r.json();
+    if (j.error === "missing_key") { box.innerHTML = `<li><button disabled>${escapeHtml(t("noKey"))}</button></li>`; return; }
     if (!j.results || !j.results.length) { box.innerHTML = `<li><button disabled>${escapeHtml(t("noResult"))}</button></li>`; return; }
     box.innerHTML = "";
     j.results.forEach((p) => {
       const li = document.createElement("li");
       const b = document.createElement("button");
-      const admin = [p.admin1, p.country].filter(Boolean).join(", ");
-      b.innerHTML = `${escapeHtml(p.name)}<small>${escapeHtml(admin)}</small>`;
-      b.addEventListener("click", () => choosePlace(p.latitude, p.longitude, `${p.name}${admin ? " — " + admin : ""}`));
+      b.innerHTML = `${escapeHtml(p.name)}<small>${escapeHtml(p.display || p.address || "")}</small>`;
+      b.addEventListener("click", async () => {
+        b.disabled = true;
+        const oldHtml = b.innerHTML;
+        b.innerHTML = escapeHtml(t("resolving"));
+        try {
+          const rr = await fetch(`/api/search?ref_id=${encodeURIComponent(p.ref_id)}`);
+          const jj = await rr.json();
+          if (jj.lat != null && jj.lng != null) {
+            choosePlace(jj.lat, jj.lng, jj.display || p.display || p.name);
+          } else {
+            b.innerHTML = oldHtml; b.disabled = false;
+          }
+        } catch { b.innerHTML = oldHtml; b.disabled = false; }
+      });
       li.appendChild(b); box.appendChild(li);
     });
   } catch { box.innerHTML = `<li><button disabled>${escapeHtml(t("netErr"))}</button></li>`; }
