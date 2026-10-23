@@ -7,10 +7,31 @@
  * API key của LLM và các nguồn thời tiết đặt trong biến môi trường Cloudflare (không commit).
  */
 
+/* Cache kết quả 1 giờ:
+   - chọn điểm bằng tìm tên → cùng địa điểm (lưới 0.02° ≈ 2km)
+   - chọn "vị trí của tôi" (GPS) → cùng vùng bán kính ~50km (lưới 0.45°)
+   Lưu ý: lưới ô vuông nên điểm gần biên ô có thể miss cache — chấp nhận được. */
+function cacheGrid(lat, lon, gps) {
+  const step = gps ? 0.45 : 0.02;
+  const dec = step < 0.1 ? 2 : 1;
+  const r = (v) => (Math.round(v / step) * step).toFixed(dec);
+  return `${r(lat)},${r(lon)}`;
+}
+
 export async function onRequestPost({ request, env }) {
   let body = {};
   try { body = await request.json(); } catch { /* bỏ qua */ }
   const { weather = {}, moon = {}, history = null } = body;
+  const lat = +body.lat, lon = +body.lon, gps = body.gps === true;
+
+  // ---- thử đọc cache (1 giờ) ----
+  const cache = caches.default;
+  const cacheReq = new Request(
+    `https://cache.local/api/predict?k=${encodeURIComponent(cacheGrid(lat, lon, gps))}`);
+  try {
+    const hit = await cache.match(cacheReq);
+    if (hit) return Response.json({ ...(await hit.json()), cached: true });
+  } catch { /* cache lỗi thì tính lại */ }
 
   // ---- TODO: thay bằng fetch tới LLM ----
   // Đọc skill kiến thức câu cá (file public/skills/kinh-nghiem-cau-ca.md,
@@ -61,7 +82,7 @@ export async function onRequestPost({ request, env }) {
     : score >= 30 ? "Cá lười ăn, đi cho vui là chính."
     : "Hôm nay cá không thèm ăn — ở nhà đỡ phí mồi.";
 
-  return Response.json({
+  const payload = {
     score, title, sub,
     chips: [
       { k: "Nhiệt độ", v: `${Math.round(t)}°C`, d: "Từ API thời tiết", cls: t >= 24 && t <= 30 ? "good" : "warn" },
@@ -71,5 +92,13 @@ export async function onRequestPost({ request, env }) {
       { k: "Mưa", v: pr > 0 ? `${pr} mm` : "Không mưa", d: pr > 0 && pr <= 2.5 ? "Mưa nhỏ — kích thích cá ăn" : pr > 2.5 ? "Mưa to — kém" : "Trời khô ráo", cls: pr > 0 && pr <= 2.5 ? "good" : pr > 2.5 ? "bad" : "" },
     ],
     demo: true,
-  });
+  };
+
+  // ---- lưu cache 1 giờ ----
+  try {
+    await cache.put(cacheReq, new Response(JSON.stringify(payload), {
+      headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" },
+    }));
+  } catch { /* bỏ qua */ }
+  return Response.json(payload);
 }

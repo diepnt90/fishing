@@ -20,8 +20,8 @@ document.querySelectorAll(".seg-btn").forEach((btn) => {
 });
 
 /* ---------- chọn địa điểm ---------- */
-function choosePlace(lat, lon, name) {
-  state.lat = lat; state.lon = lon; state.name = name;
+function choosePlace(lat, lon, name, gps = false) {
+  state.lat = lat; state.lon = lon; state.name = name; state.gps = gps;
   $("#chosen-place-name").textContent = name;
   $("#chosen-place").classList.remove("hidden");
   predict();
@@ -74,7 +74,7 @@ $("#gps-btn").addEventListener("click", () => {
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const { latitude, longitude } = pos.coords;
-      choosePlace(latitude, longitude, `Vị trí hiện tại (${latitude.toFixed(3)}, ${longitude.toFixed(3)})`);
+      choosePlace(latitude, longitude, `Vị trí hiện tại (${latitude.toFixed(3)}, ${longitude.toFixed(3)})`, true);
       st.textContent = "";
     },
     () => { st.textContent = "Không lấy được vị trí — bạn đã từ chối quyền hoặc GPS yếu."; },
@@ -128,7 +128,7 @@ async function predict() {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 4000);
     const r = await fetch("/api/predict", {
       method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
-      body: JSON.stringify({ lat: state.lat, lon: state.lon, weather: c,
+      body: JSON.stringify({ lat: state.lat, lon: state.lon, gps: state.gps, weather: c,
         moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) })
     });
     clearTimeout(t);
@@ -219,7 +219,7 @@ function demoScore(c, wx, moon, nowH) {
 
 function renderResult(data, c, moon) {
   animateScore(data.score);
-  setVerdict(data.title, data.sub, data.score);
+  setVerdict(data.title, data.sub + (data.cached ? " (kết quả đã lưu, dưới 1 giờ)" : ""), data.score);
   const box = $("#chips"); box.innerHTML = "";
   (data.chips || []).forEach((ch) => {
     const d = document.createElement("div");
