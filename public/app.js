@@ -2,7 +2,7 @@
 "use strict";
 
 const $ = (s) => document.querySelector(s);
-const state = { lat: null, lon: null, name: "", animId: null, scanId: null };
+const state = { lat: null, lon: null, name: "", animId: null };
 
 /* ---------- song ngữ VI/EN ---------- */
 let LANG = "vi";
@@ -16,12 +16,11 @@ vi: {
   searchPh: "Nhập tên hồ, sông, địa danh… vd: hồ Trị An", searchBtn: "Tìm",
   gpsHint: "Dùng GPS của thiết bị để lấy tọa độ hiện tại của bạn.", gpsBtn: "Lấy vị trí hiện tại",
   changePlace: "đổi", step2: "Dự đoán ngay lúc này", verdictLoading: "Đang xem thời tiết…",
-  verdictMore: "Xem thêm ▾", verdictLess: "Thu gọn ▴",
   legend1: "0–29 Ở nhà", legend2: "30–54 Hên xui", legend3: "55–74 Khá đấy", legend4: "75–100 Đi ngay",
   step3: "Vì sao lại thế?",
   aiNoteLive: "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế.",
   aiNoteFallback: "AI chưa phản hồi — đang dùng thuật toán dự phòng.",
-  step4: "Biến động thời tiết", step5: "10 lần check gần nhất", histHours: "5 giờ gần nhất", histDays: "5 ngày qua",
+  step4: "Biến động thời tiết", histHours: "5 giờ gần nhất", histDays: "5 ngày qua",
   histNote: "AI dùng lịch sử này để đánh giá xu hướng (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...).",
   footer: "Dữ liệu thời tiết: Open-Meteo · Pha trăng & giờ solunar tính tại chỗ",
   searching: "Đang tìm…", noResult: "Không tìm thấy, thử tên khác nhé", netErr: "Lỗi mạng, thử lại nhé",
@@ -58,12 +57,11 @@ en: {
   searchPh: "Lake, river, place name… e.g. Tri An lake", searchBtn: "Search",
   gpsHint: "Use your device GPS to get your current coordinates.", gpsBtn: "Get current location",
   changePlace: "change", step2: "Right-now forecast", verdictLoading: "Checking the weather…",
-  verdictMore: "Show more ▾", verdictLess: "Show less ▴",
   legend1: "0–29 Stay home", legend2: "30–54 Hit or miss", legend3: "55–74 Pretty good", legend4: "75–100 Go now",
   step3: "Why?",
   aiNoteLive: "Analyzed by AI from live weather data.",
   aiNoteFallback: "AI didn't respond — using the fallback algorithm.",
-  step4: "Weather trends", step5: "Last 10 checks", histHours: "Last 5 hours", histDays: "Last 5 days",
+  step4: "Weather trends", histHours: "Last 5 hours", histDays: "Last 5 days",
   histNote: "The AI uses this history to judge trends (pressure falling or rising, temperature up/down…).",
   footer: "Weather data: Open-Meteo · Moon phase & solunar times computed on-device",
   searching: "Searching…", noResult: "Not found, try another name", netErr: "Network error, try again",
@@ -104,22 +102,14 @@ function applyLang() {
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.setAttribute("placeholder", t(el.dataset.i18nPh)); });
   document.querySelectorAll("#lang-btn .flag").forEach((f) => f.classList.toggle("active", f.dataset.lang === LANG));
-  const vm = $("#verdict-more");
-  if (vm && !vm.hidden) vm.textContent = t($("#verdict-sub").classList.contains("expanded") ? "verdictLess" : "verdictMore");
   try { localStorage.setItem("fishing-lang", LANG); } catch {}
 }
-$("#verdict-more").addEventListener("click", () => {
-  const subEl = $("#verdict-sub");
-  const open = subEl.classList.toggle("expanded");
-  $("#verdict-more").textContent = t(open ? "verdictLess" : "verdictMore");
-});
 $("#lang-btn").addEventListener("click", () => {
   LANG = LANG === "vi" ? "en" : "vi";
   applyLang();
   if (state.lat != null) predict(); // dự đoán lại bằng ngôn ngữ mới
 });
 applyLang();
-renderRecent();
 
 /* mã thời tiết WMO, song ngữ */
 const WMO = {
@@ -143,7 +133,6 @@ function choosePlace(lat, lon, name, gps = false) {
   state.lat = lat; state.lon = lon; state.name = name; state.gps = gps;
   $("#chosen-place-name").textContent = name;
   $("#chosen-place").classList.remove("hidden");
-  $("#search-results").innerHTML = ""; // chọn xong thì ẩn danh sách gợi ý
   predict();
 }
 $("#change-place").addEventListener("click", () => {
@@ -239,9 +228,6 @@ async function predict() {
   scene.classList.remove("hidden"); factors.classList.remove("hidden");
   scene.scrollIntoView({ behavior: "smooth", block: "nearest" });
   setVerdict(t("vLoadingT"), t("vLoadingS"), null);
-  startSonar(); // animation máy dò cá trong lúc chờ AI
-  $("#verdict").classList.add("is-loading");
-  startScanScore(); // số nhảy random + vòng sáng lên xuống trong lúc chờ
 
   let wx;
   try {
@@ -253,7 +239,7 @@ async function predict() {
       `&timezone=auto&forecast_days=1&past_days=5`
     );
     wx = await r.json();
-  } catch { setVerdict(t("vNetErrT"), t("vNetErrS"), 0); stopSea(); stopScanScore(); $("#score").textContent = "–"; $("#gauge-arc").style.strokeDashoffset = 251.4; $("#verdict").classList.remove("is-loading"); return; }
+  } catch { setVerdict(t("vNetErrT"), t("vNetErrS"), 0); return; }
 
   const c = wx.current, moon = moonInfo();
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
@@ -275,7 +261,7 @@ async function predict() {
     }
     if (!job) return null;
     if (job.status === "done") return job; // trúng job đã xong (dedup)
-    for (let i = 0; i < 90; i++) { // poll tối đa ~180s (chờ AI reasoning medium thoải mái)
+    for (let i = 0; i < 40; i++) { // poll tối đa ~80s
       await sleep(2000);
       try {
         const pr = await fetch(`/api/predict?job=${encodeURIComponent(job.jobId)}`,
@@ -377,11 +363,8 @@ function demoScore(c, wx, moon, nowH) {
 }
 
 function renderResult(data, c, moon) {
-  $("#verdict").classList.remove("is-loading");
-  stopScanScore();
   animateScore(data.score);
   setVerdict(data.title, data.sub, data.score);
-  saveRecent(state.name, data.score, data.title);
   const box = $("#chips"); box.innerHTML = "";
   (data.chips || []).forEach((ch) => {
     const d = document.createElement("div");
@@ -391,54 +374,9 @@ function renderResult(data, c, moon) {
   });
 }
 
-/* ---------- 5) 10 lần check gần nhất (lưu trên máy, localStorage) ---------- */
-const RECENT_KEY = "fishing-recent-v1";
-function loadRecent() {
-  try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; }
-  catch { return []; }
-}
-function saveRecent(name, score, title) {
-  if (!name) return;
-  const list = loadRecent().filter((e) => e.name !== name); // trùng địa điểm → đưa lên đầu
-  list.unshift({ name, score, title, ts: Date.now() });
-  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 10))); } catch {}
-  renderRecent();
-}
-function renderRecent() {
-  const list = loadRecent(), card = $("#recent-card"), box = $("#recent-list");
-  if (!card || !box) return;
-  card.classList.toggle("hidden", list.length === 0);
-  box.innerHTML = "";
-  list.forEach((e) => {
-    const c = scoreColor(e.score);
-    const row = document.createElement("div");
-    row.className = "recent-row";
-    row.innerHTML = `<span class="recent-score" style="color:${c};border-color:${c}">${e.score}</span>` +
-      `<span class="recent-main"><span class="recent-name">${escapeHtml(e.name)}</span>` +
-      `<span class="recent-time">${fmtTime(e.ts)}</span></span>` +
-      `<span class="recent-verdict" style="color:${c}">${escapeHtml(e.title)}</span>`;
-    box.appendChild(row);
-  });
-}
-
-function fmtTime(ts) {
-  if (!ts) return "";
-  const d = new Date(ts), p = (n) => String(n).padStart(2, "0");
-  return `${p(d.getHours())}:${p(d.getMinutes())} ${p(d.getDate())}/${p(d.getMonth() + 1)}`;
-}
-
 function setVerdict(title, sub, score) {
   $("#verdict-title").textContent = title;
-  const subEl = $("#verdict-sub"), moreBtn = $("#verdict-more");
-  subEl.textContent = sub;
-  subEl.classList.remove("expanded");
-  moreBtn.hidden = true;
-  // chỉ hiện nút "xem thêm" khi chữ thật sự bị cắt bớt
-  requestAnimationFrame(() => {
-    const cut = subEl.scrollHeight > subEl.clientHeight + 1;
-    moreBtn.hidden = !cut;
-    if (cut) moreBtn.textContent = t("verdictMore");
-  });
+  $("#verdict-sub").textContent = sub;
   const el = $("#verdict-title");
   el.style.color = score == null ? "var(--ink)" : score >= 75 ? "var(--glow)" : score >= 55 ? "var(--lime)" : score >= 30 ? "var(--amber)" : "var(--coral)";
   el.style.textShadow = `0 0 34px ${score == null ? "transparent" : score >= 75 ? "rgba(62,230,196,.55)" : score >= 55 ? "rgba(163,230,53,.45)" : score >= 30 ? "rgba(245,185,66,.45)" : "rgba(255,107,107,.45)"}`;
@@ -525,105 +463,11 @@ function animateScore(target) {
   requestAnimationFrame(tick);
 }
 
-/* ---------- số nhảy random + vòng đồng hồ sáng lên xuống lúc chờ AI ---------- */
-function stopScanScore() {
-  if (state.scanId) cancelAnimationFrame(state.scanId);
-  state.scanId = null;
-  const arc = $("#gauge-arc");
-  arc.style.opacity = ""; arc.style.filter = "";
-}
-function startScanScore() {
-  stopScanScore();
-  const arc = $("#gauge-arc"), num = $("#score"), len = 251.4;
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    num.textContent = "–"; arc.style.strokeDashoffset = len; return;
-  }
-  let val = 0, target = 10 + Math.random() * 80, lastSwitch = 0;
-  function frame(t) {
-    if (t - lastSwitch > 280) { target = 5 + Math.random() * 90; lastSwitch = t; }
-    val += (target - val) * 0.35;
-    const v = Math.round(val);
-    num.textContent = v;
-    arc.style.strokeDashoffset = len * (1 - v / 100);
-    const pulse = Math.abs(Math.sin(t / 380));   // 0..1: sáng lên xuống
-    arc.style.opacity = (0.45 + 0.55 * pulse).toFixed(2);
-    arc.style.filter = "drop-shadow(0 0 " + Math.round(3 + 9 * pulse) + "px rgba(62,230,196,.75))";
-    state.scanId = requestAnimationFrame(frame);
-  }
-  state.scanId = requestAnimationFrame(frame);
-}
-
 /* ---------- đàn cá canvas ----------
    Điểm cao → đông cá, bơi nhanh, sáng rực. Điểm thấp → lèo tèo vài con, bơi chậm, mờ.
    Tầng ăn (depthAvg 0=mặt → 2=đáy) → đàn cá tụ về đúng tầng đó, di cư mượt mà. */
 function scoreColor(s) { return s >= 75 ? "#3ee6c4" : s >= 55 ? "#a3e635" : s >= 30 ? "#f5b942" : "#ff6b6b"; }
 function stopSea() { if (state.animId) cancelAnimationFrame(state.animId); state.animId = null; }
-
-/* ---------- sonar máy dò cá: chạy trong lúc chờ AI ---------- */
-function startSonar() {
-  stopSea();
-  const cv = $("#sea"), ctx = cv.getContext("2d");
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const W = cv.clientWidth, H = cv.clientHeight;
-  cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const cx = W / 2, cy = H * 0.52, maxR = Math.hypot(W, H) / 2;
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    ctx.beginPath(); ctx.arc(cx, cy, maxR * 0.45, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(62,230,196,.25)"; ctx.lineWidth = 2; ctx.stroke();
-    return;
-  }
-  const rings = [{ r: 0 }];
-  let lastPing = 0;
-  const blips = Array.from({ length: 6 }, (_, i) => {
-    const ang = hash1(i * 31 + 2) * Math.PI * 2, rr = maxR * (0.25 + hash1(i * 37 + 3) * 0.55);
-    return { x: cx + Math.cos(ang) * rr, y: cy + Math.sin(ang) * rr * 0.7, ang, glow: 0, s: 3 + hash1(i * 41 + 4) * 4 };
-  });
-  function frame(t) {
-    ctx.clearRect(0, 0, W, H);
-    // vòng ping lan ra từ tâm
-    if (t - lastPing > 1100) { rings.push({ r: 0 }); lastPing = t; }
-    for (let i = rings.length - 1; i >= 0; i--) {
-      const rg = rings[i];
-      rg.r += Math.max(1.4, maxR / 150);
-      const k = rg.r / maxR;
-      if (k >= 1) { rings.splice(i, 1); continue; }
-      ctx.beginPath(); ctx.arc(cx, cy, rg.r, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(62,230,196," + (0.45 * (1 - k)).toFixed(3) + ")";
-      ctx.lineWidth = 2; ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 10;
-      ctx.stroke(); ctx.shadowBlur = 0;
-    }
-    // tia quét xoay
-    const sw = (t / 1400) % (Math.PI * 2);
-    if (ctx.createConicGradient) {
-      const g = ctx.createConicGradient(sw - 0.6, cx, cy);
-      g.addColorStop(0, "rgba(62,230,196,0)");
-      g.addColorStop(0.09, "rgba(62,230,196,.22)");
-      g.addColorStop(0.1, "rgba(62,230,196,0)");
-      g.addColorStop(1, "rgba(62,230,196,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, maxR, 0, Math.PI * 2); ctx.closePath(); ctx.fill();
-    } else {
-      ctx.save(); ctx.strokeStyle = "rgba(62,230,196,.5)"; ctx.lineWidth = 2;
-      ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 12;
-      ctx.beginPath(); ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(sw) * maxR, cy + Math.sin(sw) * maxR); ctx.stroke(); ctx.restore();
-    }
-    // chấm cá sáng lên khi tia quét đi qua
-    blips.forEach((b) => {
-      let d = (sw - b.ang) % (Math.PI * 2);
-      if (d < 0) d += Math.PI * 2;
-      if (d < 0.15) b.glow = 1;
-      b.glow *= 0.965;
-      ctx.save();
-      ctx.globalAlpha = 0.22 + b.glow * 0.78;
-      ctx.fillStyle = "#3ee6c4"; ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 4 + b.glow * 16;
-      ctx.beginPath(); ctx.ellipse(b.x, b.y, b.s, b.s * 0.42, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    });
-    state.animId = requestAnimationFrame(frame);
-  }
-  state.animId = requestAnimationFrame(frame);
-}
 const hash1 = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
 function startSea(score, depthAvg = 1) {

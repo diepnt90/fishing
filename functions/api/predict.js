@@ -33,9 +33,9 @@ const T = {
   },
 };
 
-/* lưới cache: tìm địa điểm → 0.02° (~2km); GPS → 0.27° (~30km) */
+/* lưới cache: tìm địa điểm → 0.02° (~2km); GPS → 0.45° (~50km) */
 function cacheGrid(lat, lon, gps) {
-  const step = gps ? 0.27 : 0.02;
+  const step = gps ? 0.45 : 0.02;
   const dec = step < 0.1 ? 2 : 1;
   const r = (v) => (Math.round(v / step) * step).toFixed(dec);
   return `${r(lat)},${r(lon)}`;
@@ -137,10 +137,6 @@ function fmtMoon(moon = {}, lang = "vi") {
   return `${moon.phase || "?"} (${lang === "en" ? "illumination" : "độ sáng"} ${pct}%)`;
 }
 
-function localTime(w = {}) {
-  const m = /T(\d{2}:\d{2})/.exec(w.time || "");
-  return m ? m[1] : "?";
-}
 function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck }) {
   const en = lang === "en";
   const body = en ? [
@@ -152,7 +148,6 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "## CURRENT DATA (units are explicit — keep the same units in chips)",
     `Location: ${lat}, ${lon} (Vietnam)`,
     `Weather now: ${fmtWeather(weather, lang)}.`,
-    `Local time: ${localTime(weather)} (fishing time).`,
     `Moon: ${fmtMoon(moon, lang)}.`,
     "History — use to judge TRENDS (pressure falling or rising, temperature up/down...):",
     fmtHistory(history, lang),
@@ -170,11 +165,6 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "5. Cloud / rain",
     "6. Humidity",
     "",
-    "## HARD RULES (always obey — these override everything else)",
-    "1. LOW-OXYGEN day (temperature ≥30°C AND wind ≤5 km/h): fish are stressed and only surface to breathe — they eat WEAKLY or STOP eating. Score MAX 40. Mid-water movement on such a day is a BAD sign of stress, NEVER a good feeding signal: never write chip reasons like 'good for mid-water feeding' or 'encourages mid-water feeding'. For these 5 bottom-feeder species, any mid-water feeding (depth=1) always means the fish are eating SLOWLY — always a bad signal, penalize heavily.",
-"2. Sunny + temperature >30°C: the closer to midday, the lower the score — light penalty around 9:00–10:00, heaviest around 11:00–13:00 (harshest sun), easing after 15:00. Bottom fish retreat deep under harsh midday sun and barely feed.",
-    "3. Humidity >85% → fish eat weakly (penalize heavily). Pressure >1020 hPa → strong feeding; pressure <1000 hPa → fish don't feed (score max 25).",
-    "",
     "## REQUIREMENTS",
     "Predict RIGHT NOW whether fish are biting. Return pure JSON only (no markdown, no extra explanation):",
     "{",
@@ -187,7 +177,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     '  ], // cls is good | warn | bad | ""',
     '  "depth": 0 (surface feeding) | 1 (mid-water) | 2 (bottom)',
     "}",
-    "Note: bottom feeders normally feed at the bottom; only choose mid-water/surface when there are signs of low oxygen (hot, muggy, still air) or other special conditions — and in that case keep the score LOW (≤40) because the fish are stressed, not feeding well.",
+    "Note: bottom feeders normally feed at the bottom; only choose mid-water/surface when there are signs of low oxygen (hot, muggy, still air) or other special conditions.",
   ] : [
     "Bạn là chuyên gia câu cá nước ngọt Việt Nam (cá chép, trôi, trắm, rô phi, diếc — đều là cá ăn tầng đáy).",
     "",
@@ -197,7 +187,6 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "## SỐ LIỆU HIỆN TẠI (đơn vị đã ghi rõ — giữ nguyên đơn vị khi trả về chips)",
     `Vị trí: ${lat}, ${lon} (Việt Nam)`,
     `Thời tiết lúc này: ${fmtWeather(weather, lang)}.`,
-    `Giờ địa phương: ${localTime(weather)} (giờ đi câu).`,
     `Mặt trăng: ${fmtMoon(moon, lang)}.`,
     "Lịch sử — dùng để đánh giá XU HƯỚNG (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...):",
     fmtHistory(history, lang),
@@ -215,11 +204,6 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "5. Mây / mưa",
     "6. Độ ẩm",
     "",
-    "## NGƯỠNG CỨNG (luôn tuân thủ tuyệt đối — ghi đè mọi yếu tố khác)",
-    "1. Ngày THIẾU OXY (nhiệt độ ≥30°C VÀ gió ≤5 km/h): cá bị stress, chỉ nổi lên để thở — ĂN YẾU HOẶC NGỪNG ĂN. Điểm TỐI ĐA 40. Cá 'ăn lửng' trong ngày này là tín hiệu XẤU (cá đang ngạt), KHÔNG phải tín hiệu tốt: cấm viết lý do chip kiểu 'phù hợp ăn lửng', 'tích cực cho ăn lửng', 'khuyến khích ăn lửng'. Với 5 loài cá đáy này, bất cứ khi nào cá đi lửng (depth=1) cũng đồng nghĩa cá đang ăn CHẬM — luôn là tín hiệu xấu, phải trừ điểm mạnh.",
-    "2. Trời nắng + nhiệt độ >30°C: càng gần giữa trưa điểm càng giảm — khoảng 9h–10h trừ nhẹ, 11h–13h (nắng gắt nhất) trừ mạnh nhất, sau 15h nới dần. Cá rút sâu giữa trưa nắng gắt, hầu như không đi ăn.",
-    "3. Độ ẩm >85% → cá ăn yếu (trừ điểm mạnh). Áp suất >1020 hPa → cá ăn mạnh; <1000 hPa → cá không ăn (điểm tối đa 25).",
-    "",
     "## YÊU CẦU",
     "Dự đoán NGAY LÚC NÀY cá có đi ăn không. Chỉ trả về JSON thuần (không markdown, không giải thích thêm):",
     "{",
@@ -232,7 +216,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     '  ], // cls là good | warn | bad | ""',
     '  "depth": 0 (cá ăn mặt) | 1 (ăn lửng) | 2 (ăn đáy)',
     "}",
-    "Lưu ý: cá tầng đáy bình thường luôn ăn ở đáy; chỉ cho ăn lửng/mặt khi có dấu hiệu thiếu oxy (trời oi nóng, lặng gió) — và khi đó điểm phải THẤP (≤40) vì cá đang stress chứ không phải đang ăn mạnh.",
+    "Lưu ý: cá tầng đáy bình thường luôn ăn ở đáy; chỉ cho ăn lửng/mặt khi có dấu hiệu thiếu oxy (trời oi nóng, lặng gió) hoặc điều kiện đặc biệt khác.",
   ];
   return body.join("\n");
 }
@@ -240,7 +224,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
 async function llmPredict(env, origin, { weather, moon, history, lat, lon, crossCheck, lang = "vi" }) {
   let skill = "";
   try {
-    const sr = await fetch(`${origin}/skills/kinh-nghiem-cau-ca.md`);
+    const sr = await fetch(`${origin}/skills/kinh-nghiem-cau-ca.md`, { signal: AbortSignal.timeout(10000) });
     if (sr.ok) skill = await sr.text();
   } catch { /* thiếu skill vẫn dự đoán được */ }
 
@@ -249,7 +233,7 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.LLM_API_KEY}`, "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(120000), // chờ AI thoải mái (reasoning medium)
+    signal: AbortSignal.timeout(60000),
     body: JSON.stringify({
       model: LLM_MODEL,
       reasoning_effort: "medium",
