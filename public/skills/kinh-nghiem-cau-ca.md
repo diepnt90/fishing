@@ -24,4 +24,3 @@ Phạm vi: cá tầng đáy VN — chép, trôi, trắm (cỏ/đen), rô phi, di
 - Hôm trước mưa cả ngày, hôm sau tạnh/gió mạnh → cá không ăn.
 - Độ ẩm >85% → ăn yếu; ẩm thấp → ăn mạnh hơn.
 - Áp suất >1020 hPa → ăn mạnh; <1000 hPa → cá không ăn.
-- Kỹ thuật thử mồi: chép/diéc/trôi ưu tiên đáy–sát đáy; trắm cỏ trời ấm mất tín hiệu thì nâng mồi 30–50cm; rô phi nước mát câu đáy, nước ấm thêm tầng giữa/vùng nông; mồi mất tín hiệu khi chạm đáy → cá đang ăn lửng → đổi độ cao mồi từng nấc.
