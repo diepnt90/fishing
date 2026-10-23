@@ -13,6 +13,26 @@
 const CACHE_ENABLED = false; // testing: mỗi request là 1 job mới; true: dedup job theo lưới+khung giờ (~1h)
 const LLM_MODEL = "gpt-5-nano";
 
+/* chuỗi dùng chung, song ngữ */
+const T = {
+  vi: {
+    compass: ["Bắc","Đông Bắc","Đông","Đông Nam","Nam","Tây Nam","Tây","Tây Bắc"],
+    wmo: {0:"Quang đãng",1:"Chủ yếu quang đãng",2:"Mây rải rác",3:"Âm u",45:"Sương mù",48:"Sương mù đóng băng",51:"Mưa phùn nhẹ",53:"Mưa phùn",55:"Mưa phùn dày",56:"Mưa phùn đóng băng",57:"Mưa phùn đóng băng",61:"Mưa nhẹ",63:"Mưa vừa",65:"Mưa to",66:"Mưa đóng băng",67:"Mưa đóng băng",71:"Tuyết nhẹ",73:"Tuyết",75:"Tuyết dày",77:"Tuyết hạt",80:"Mưa rào nhẹ",81:"Mưa rào vừa",82:"Mưa rào to",85:"Mưa tuyết",86:"Mưa tuyết",95:"Dông",96:"Dông kèm mưa đá",99:"Dông kèm mưa đá"},
+    agree: "đồng thuận", partial: "chênh lệch vừa", conflict: "MÂU THUẪN", rainDiff: "chênh lệch",
+    warn: "⚠️ CẢNH BÁO: các nguồn mâu thuẫn mạnh — hãy thận trọng, giảm độ tin cậy của kết luận.",
+    ok: "Các nguồn nhìn chung đồng thuận — dữ liệu đáng tin.",
+    oneSrc: "(chỉ có 1 nguồn khả dụng — chưa đối chứng được)",
+  },
+  en: {
+    compass: ["N","NE","E","SE","S","SW","W","NW"],
+    wmo: {0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Icy fog",51:"Light drizzle",53:"Drizzle",55:"Dense drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Moderate rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Light showers",81:"Moderate showers",82:"Violent showers",85:"Snow showers",86:"Snow showers",95:"Thunderstorm",96:"Storm with hail",99:"Storm with hail"},
+    agree: "agree", partial: "differ somewhat", conflict: "CONFLICT", rainDiff: "differ",
+    warn: "⚠️ WARNING: sources strongly disagree — be cautious, lower confidence in the conclusion.",
+    ok: "Sources generally agree — data looks reliable.",
+    oneSrc: "(only 1 source available — no cross-check possible)",
+  },
+};
+
 /* lưới cache: tìm địa điểm → 0.02° (~2km); GPS → 0.45° (~50km) */
 function cacheGrid(lat, lon, gps) {
   const step = gps ? 0.45 : 0.02;
@@ -20,10 +40,10 @@ function cacheGrid(lat, lon, gps) {
   const r = (v) => (Math.round(v / step) * step).toFixed(dec);
   return `${r(lat)},${r(lon)}`;
 }
-function jobIdFor(lat, lon, gps) {
+function jobIdFor(lat, lon, gps, lang = "vi") {
   const grid = cacheGrid(lat, lon, gps);
-  if (!CACHE_ENABLED) return `${grid}|${Date.now()}|${Math.random().toString(36).slice(2, 8)}`;
-  return `${grid}|${Math.floor(Date.now() / 3600000)}`; // dedup ~1 giờ
+  if (!CACHE_ENABLED) return `${grid}|${lang}|${Date.now()}|${Math.random().toString(36).slice(2, 8)}`;
+  return `${grid}|${lang}|${Math.floor(Date.now() / 3600000)}`; // dedup ~1 giờ
 }
 const jobKey = (jid) => new Request(`https://cache.local/api/job?k=${encodeURIComponent(jid)}`);
 const jsonCache = (obj, maxAge = 3600) =>
@@ -31,13 +51,14 @@ const jsonCache = (obj, maxAge = 3600) =>
     headers: { "content-type": "application/json", "cache-control": `public, max-age=${maxAge}` },
   });
 
-function demoPredict(weather, moon) {
+function demoPredict(weather, moon, lang = "vi") {
+  const en = lang === "en";
   const t = weather.temperature_2m ?? 28;
   const p = weather.pressure_msl ?? 1013;
   const w = weather.wind_speed_10m ?? 8;
   const hu = weather.relative_humidity_2m ?? 70;
   const pr = weather.precipitation ?? 0;
-  const wdirs = ["Bắc", "Đông Bắc", "Đông", "Đông Nam", "Nam", "Tây Nam", "Tây", "Tây Bắc"];
+  const wdirs = T[lang].compass;
   const wdir = weather.wind_direction_10m;
   const wdirName = wdir == null ? "" : wdirs[Math.round(wdir / 45) % 8];
   const illum = moon.illum ?? 0.5;
@@ -50,31 +71,44 @@ function demoPredict(weather, moon) {
   score += Math.round(14 * (1 - prox * 2));
   score = Math.max(5, Math.min(97, score));
 
-  const title = score >= 75 ? "ĐI CÂU NGAY!" : score >= 55 ? "KHÁ ĐẤY" : score >= 30 ? "HÊN XUI" : "Ở NHÀ ĐI";
-  const sub = score >= 75 ? "Cá đang ăn mạnh — xách cần lên đường!"
-    : score >= 55 ? "Có cơ hội tốt, canh đúng giờ vàng mà quất."
-    : score >= 30 ? "Cá lười ăn, đi cho vui là chính."
-    : "Hôm nay cá không thèm ăn — ở nhà đỡ phí mồi.";
+  const title = score >= 75 ? (en ? "GO FISHING!" : "ĐI CÂU NGAY!")
+    : score >= 55 ? (en ? "PRETTY GOOD" : "KHÁ ĐẤY")
+    : score >= 30 ? (en ? "HIT OR MISS" : "HÊN XUI") : (en ? "STAY HOME" : "Ở NHÀ ĐI");
+  const sub = score >= 75 ? (en ? "Fish are biting hard — grab your rod!" : "Cá đang ăn mạnh — xách cần lên đường!")
+    : score >= 55 ? (en ? "Good chance, time it with the golden hour." : "Có cơ hội tốt, canh đúng giờ vàng mà quất.")
+    : score >= 30 ? (en ? "Fish are lazy; go for fun." : "Cá lười ăn, đi cho vui là chính.")
+    : (en ? "Fish aren't biting today — save your bait." : "Hôm nay cá không thèm ăn — ở nhà đỡ phí mồi.");
+  const fromApi = en ? "From weather API" : "Từ API thời tiết";
 
   return {
     score, title, sub,
     chips: [
-      { k: "Nhiệt độ", v: `${Math.round(t)}°C`, d: "Từ API thời tiết", cls: t >= 24 && t <= 30 ? "good" : "warn" },
-      { k: "Áp suất", v: `${Math.round(p)} hPa`, d: "Từ API thời tiết", cls: p >= 1013 && p <= 1022 ? "good" : "warn" },
-      { k: "Gió", v: `${Math.round(w)} km/h${wdirName ? " · " + wdirName : ""}`, d: "Từ API thời tiết", cls: w < 15 ? "good" : "warn" },
-      { k: "Độ ẩm", v: `${hu}%`, d: hu >= 85 ? "Ẩm cao — có thể sắp mưa" : "Bình thường", cls: "" },
-      { k: "Mưa", v: pr > 0 ? `${pr} mm` : "Không mưa", d: pr > 0 && pr <= 2.5 ? "Mưa nhỏ — kích thích cá ăn" : pr > 2.5 ? "Mưa to — kém" : "Trời khô ráo", cls: pr > 0 && pr <= 2.5 ? "good" : pr > 2.5 ? "bad" : "" },
+      { k: en ? "Temperature" : "Nhiệt độ", v: `${Math.round(t)}°C`, d: fromApi, cls: t >= 24 && t <= 30 ? "good" : "warn" },
+      { k: en ? "Pressure" : "Áp suất", v: `${Math.round(p)} hPa`, d: fromApi, cls: p >= 1013 && p <= 1022 ? "good" : "warn" },
+      { k: en ? "Wind" : "Gió", v: `${Math.round(w)} km/h${wdirName ? " · " + wdirName : ""}`, d: fromApi, cls: w < 15 ? "good" : "warn" },
+      { k: en ? "Humidity" : "Độ ẩm", v: `${hu}%`, d: hu >= 85 ? (en ? "High humidity — rain may be coming" : "Ẩm cao — có thể sắp mưa") : (en ? "Normal" : "Bình thường"), cls: "" },
+      { k: en ? "Rain" : "Mưa", v: pr > 0 ? `${pr} mm` : (en ? "No rain" : "Không mưa"), d: pr > 0 && pr <= 2.5 ? (en ? "Light rain — triggers feeding" : "Mưa nhỏ — kích thích cá ăn") : pr > 2.5 ? (en ? "Heavy rain — poor" : "Mưa to — kém") : (en ? "Dry" : "Trời khô ráo"), cls: pr > 0 && pr <= 2.5 ? "good" : pr > 2.5 ? "bad" : "" },
     ],
     demo: true,
   };
 }
 
 /* Format số liệu KÈM ĐƠN VỊ cho AI — tránh AI đoán nhầm đơn vị (vd: km/h thành m/s) */
-function fmtWeather(w = {}) {
-  const dirs = ["Bắc", "Đông Bắc", "Đông", "Đông Nam", "Nam", "Tây Nam", "Tây", "Tây Bắc"];
+function fmtWeather(w = {}, lang = "vi") {
+  const en = lang === "en";
+  const dirs = T[lang].compass;
   const wd = w.wind_direction_10m;
   const wdName = wd == null ? "?" : dirs[Math.round(wd / 45) % 8];
-  return [
+  return en ? [
+    `temperature ${w.temperature_2m ?? "?"}°C`,
+    `humidity ${w.relative_humidity_2m ?? "?"}%`,
+    `pressure ${w.pressure_msl ?? "?"} hPa`,
+    `cloud ${w.cloud_cover ?? "?"}%`,
+    `wind ${w.wind_speed_10m ?? "?"} km/h, direction ${wd ?? "?"}° (${wdName})`,
+    `rain ${w.precipitation ?? "?"} mm`,
+    `WMO weather code ${w.weather_code ?? "?"}`,
+    w.is_day === 1 ? "daytime" : w.is_day === 0 ? "nighttime" : "",
+  ].filter(Boolean).join("; ") : [
     `nhiệt độ ${w.temperature_2m ?? "?"}°C`,
     `độ ẩm ${w.relative_humidity_2m ?? "?"}%`,
     `áp suất ${w.pressure_msl ?? "?"} hPa`,
@@ -85,27 +119,57 @@ function fmtWeather(w = {}) {
     w.is_day === 1 ? "đang là ban ngày" : w.is_day === 0 ? "đang là ban đêm" : "",
   ].filter(Boolean).join("; ");
 }
-function fmtHistory(h) {
-  if (!h) return "(không có)";
+function fmtHistory(h, lang = "vi") {
+  if (!h) return lang === "en" ? "(none)" : "(không có)";
+  const en = lang === "en";
+  const wmoName = (c) => T[lang].wmo[c] ?? "?";
   const hh = (h.hours || []).map((x) =>
-    `${x.time}: ${x.temp}°C, ${x.pressure} hPa, gió ${x.wind} km/h, mây ${x.cloud}%, mưa ${x.precip} mm`).join(" | ");
+    en ? `${x.time}: ${x.temp}°C, ${x.pressure} hPa, wind ${x.wind} km/h, cloud ${x.cloud}%, rain ${x.precip} mm`
+       : `${x.time}: ${x.temp}°C, ${x.pressure} hPa, gió ${x.wind} km/h, mây ${x.cloud}%, mưa ${x.precip} mm`).join(" | ");
   const dd = (h.days || []).map((x) =>
-    `${x.label}: cao ${x.tmax}°C/thấp ${x.tmin}°C, mưa ${x.precip} mm, ${x.wmo}`).join(" | ");
-  return `5 giờ gần nhất: ${hh} \n5 ngày qua: ${dd}`;
+    en ? `${x.label}: high ${x.tmax}°C/low ${x.tmin}°C, rain ${x.precip} mm, ${wmoName(x.wmoCode)}`
+       : `${x.label}: cao ${x.tmax}°C/thấp ${x.tmin}°C, mưa ${x.precip} mm, ${wmoName(x.wmoCode)}`).join(" | ");
+  return en ? `Last 5 hours: ${hh} \nLast 5 days: ${dd}` : `5 giờ gần nhất: ${hh} \n5 ngày qua: ${dd}`;
 }
-function fmtMoon(moon = {}) {
+function fmtMoon(moon = {}, lang = "vi") {
   const pct = Math.round((moon.illum ?? 0) * 100);
-  return `${moon.phase || "?"} (độ sáng ${pct}%)`;
+  return `${moon.phase || "?"} (${lang === "en" ? "illumination" : "độ sáng"} ${pct}%)`;
 }
 
-async function llmPredict(env, origin, { weather, moon, history, lat, lon, crossCheck }) {
-  let skill = "";
-  try {
-    const sr = await fetch(`${origin}/skills/kinh-nghiem-cau-ca.md`);
-    if (sr.ok) skill = await sr.text();
-  } catch { /* thiếu skill vẫn dự đoán được */ }
-
-  const prompt = [
+function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck }) {
+  const en = lang === "en";
+  const body = en ? [
+    "You are a Vietnamese freshwater fishing expert (common carp, mud carp, grass/black carp, tilapia, crucian carp — all bottom feeders).",
+    "",
+    "## KNOWLEDGE (non-obvious tips only; the section below is written in Vietnamese — understand it, but respond in English)",
+    skill || "(none yet)",
+    "",
+    "## CURRENT DATA (units are explicit — keep the same units in chips)",
+    `Location: ${lat}, ${lon} (Vietnam)`,
+    `Weather now: ${fmtWeather(weather, lang)}.`,
+    `Moon: ${fmtMoon(moon, lang)}.`,
+    "History — use to judge TRENDS (pressure falling or rising, temperature up/down...):",
+    fmtHistory(history, lang),
+    "Note: wind figures are model forecast at 10m height (may be stronger than actual ground-level wind in built-up areas).",
+    "",
+    "## 3-SOURCE WEATHER CROSS-CHECK",
+    crossCheck || "(no cross-check data)",
+    "Weigh the agreement/disagreement between sources in your conclusion. If they strongly conflict, say so in sub.",
+    "",
+    "## REQUIREMENTS",
+    "Predict RIGHT NOW whether fish are biting. Return pure JSON only (no markdown, no extra explanation):",
+    "{",
+    '  "score": number 0-100 (higher = more worth going fishing),',
+    '  "title": "short English title, e.g.: GO FISHING! / PRETTY GOOD / HIT OR MISS / STAY HOME",',
+    '  "sub": "one short sentence of explanation",',
+    '  "chips": [',
+    '    {"k": "Temperature", "v": "28°C", "d": "short reason", "cls": "good"},',
+    "    ... factors: Pressure (with trend), Wind (with direction), Rain, Moon & solunar times, Humidity (reference)",
+    '  ], // cls is good | warn | bad | ""',
+    '  "depth": 0 (surface feeding) | 1 (mid-water) | 2 (bottom)',
+    "}",
+    "Note: bottom feeders normally feed at the bottom; only choose mid-water/surface when there are signs of low oxygen (hot, muggy, still air) or other special conditions.",
+  ] : [
     "Bạn là chuyên gia câu cá nước ngọt Việt Nam (cá chép, trôi, trắm, rô phi, diếc — đều là cá ăn tầng đáy).",
     "",
     "## KINH NGHIỆM (chỉ ghi những điều không hiển nhiên, đừng dùng kiến thức phổ thông)",
@@ -113,10 +177,10 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
     "",
     "## SỐ LIỆU HIỆN TẠI (đơn vị đã ghi rõ — giữ nguyên đơn vị khi trả về chips)",
     `Vị trí: ${lat}, ${lon} (Việt Nam)`,
-    `Thời tiết lúc này: ${fmtWeather(weather)}.`,
-    `Mặt trăng: ${fmtMoon(moon)}.`,
+    `Thời tiết lúc này: ${fmtWeather(weather, lang)}.`,
+    `Mặt trăng: ${fmtMoon(moon, lang)}.`,
     "Lịch sử — dùng để đánh giá XU HƯỚNG (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...):",
-    fmtHistory(history),
+    fmtHistory(history, lang),
     "Lưu ý: số liệu gió là của model dự báo ở độ cao 10m (có thể mạnh hơn gió thực tế mặt đất trong khu dân cư).",
     "",
     "## ĐỐI CHỨNG 3 NGUỒN THỜI TIẾT",
@@ -136,7 +200,18 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
     '  "depth": 0 (cá ăn mặt) | 1 (ăn lửng) | 2 (ăn đáy)',
     "}",
     "Lưu ý: cá tầng đáy bình thường luôn ăn ở đáy; chỉ cho ăn lửng/mặt khi có dấu hiệu thiếu oxy (trời oi nóng, lặng gió) hoặc điều kiện đặc biệt khác.",
-  ].join("\n");
+  ];
+  return body.join("\n");
+}
+
+async function llmPredict(env, origin, { weather, moon, history, lat, lon, crossCheck, lang = "vi" }) {
+  let skill = "";
+  try {
+    const sr = await fetch(`${origin}/skills/kinh-nghiem-cau-ca.md`);
+    if (sr.ok) skill = await sr.text();
+  } catch { /* thiếu skill vẫn dự đoán được */ }
+
+  const prompt = buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck });
 
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -165,7 +240,7 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
 }
 
 /* ---------- đối chứng 3 nguồn thời tiết ---------- */
-async function fetchExtraSources(env, lat, lon) {
+async function fetchExtraSources(env, lat, lon, lang = "vi") {
   const out = { weatherapi: null, openweather: null };
   const jobs = [];
   if (env.WEATHERAPI_KEY) {
@@ -189,7 +264,7 @@ async function fetchExtraSources(env, lat, lon) {
     jobs.push((async () => {
       try {
         const r = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${env.OPENWEATHER_KEY}&units=metric&lang=vi`,
+          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${env.OPENWEATHER_KEY}&units=metric&lang=${lang}`,
           { signal: AbortSignal.timeout(8000) });
         if (!r.ok) return;
         const j = await r.json();
@@ -208,13 +283,13 @@ async function fetchExtraSources(env, lat, lon) {
   return out;
 }
 
-function crossCheckText(omW, extra) {
+function crossCheckText(omW, extra, lang = "vi") {
   const om = { name: "Open-Meteo", temp: omW.temperature_2m, humidity: omW.relative_humidity_2m,
     pressure: omW.pressure_msl, wind: omW.wind_speed_10m, cloud: omW.cloud_cover, precip: omW.precipitation };
   const srcs = [om];
   if (extra.weatherapi) srcs.push({ name: "WeatherAPI", ...extra.weatherapi });
   if (extra.openweather) srcs.push({ name: "OpenWeather", ...extra.openweather });
-  if (srcs.length < 2) return "(chỉ có 1 nguồn khả dụng — chưa đối chứng được)";
+  if (srcs.length < 2) return T[lang].oneSrc;
   const vals = (k) => srcs.map((s) => s[k]).filter((v) => v != null);
   const spread = (arr) => (arr.length ? Math.max(...arr) - Math.min(...arr) : 0);
   const fmt = (k, unit, rd = 1) =>
@@ -222,14 +297,12 @@ function crossCheckText(omW, extra) {
   const tS = spread(vals("temp")), pS = spread(vals("pressure")),
         wS = spread(vals("wind")), rS = spread(vals("precip"));
   const lines = [
-    `Nhiệt độ: ${fmt("temp", "°C")} → ${tS <= 2 ? "đồng thuận" : tS <= 4 ? "chênh lệch vừa" : "MÂU THUẪN"}`,
-    `Áp suất: ${fmt("pressure", "hPa", 0)} → ${pS <= 2 ? "đồng thuận" : pS <= 4 ? "chênh lệch vừa" : "MÂU THUẪN"}`,
-    `Gió: ${fmt("wind", "km/h")} → ${wS <= 5 ? "đồng thuận" : wS <= 10 ? "chênh lệch vừa" : "MÂU THUẪN"}`,
-    `Mưa: ${fmt("precip", "mm")} → ${rS <= 1 ? "đồng thuận" : "chênh lệch"}`,
+    `${T[lang].agree === "agree" ? "Temperature" : "Nhiệt độ"}: ${fmt("temp", "°C")} → ${tS <= 2 ? T[lang].agree : tS <= 4 ? T[lang].partial : T[lang].conflict}`,
+    `${T[lang].agree === "agree" ? "Pressure" : "Áp suất"}: ${fmt("pressure", "hPa", 0)} → ${pS <= 2 ? T[lang].agree : pS <= 4 ? T[lang].partial : T[lang].conflict}`,
+    `${T[lang].agree === "agree" ? "Wind" : "Gió"}: ${fmt("wind", "km/h")} → ${wS <= 5 ? T[lang].agree : wS <= 10 ? T[lang].partial : T[lang].conflict}`,
+    `${T[lang].agree === "agree" ? "Rain" : "Mưa"}: ${fmt("precip", "mm")} → ${rS <= 1 ? T[lang].agree : T[lang].rainDiff}`,
   ];
-  lines.push((tS > 4 || pS > 4 || wS > 10)
-    ? "⚠️ CẢNH BÁO: các nguồn mâu thuẫn mạnh — hãy thận trọng, giảm độ tin cậy của kết luận."
-    : "Các nguồn nhìn chung đồng thuận — dữ liệu đáng tin.");
+  lines.push((tS > 4 || pS > 4 || wS > 10) ? T[lang].warn : T[lang].ok);
   return lines.join("\n");
 }
 
@@ -238,13 +311,14 @@ async function runJob(env, origin, jid, input) {
   let result;
   try {
     if (!env.LLM_API_KEY) throw new Error("LLM HTTP no_key");
-    const extra = await fetchExtraSources(env, input.lat, input.lon);
-    const checkText = crossCheckText(input.weather, extra);
-    result = await llmPredict(env, origin, { ...input, crossCheck: checkText });
+    const lang = input.lang === "en" ? "en" : "vi";
+    const extra = await fetchExtraSources(env, input.lat, input.lon, lang);
+    const checkText = crossCheckText(input.weather, extra, lang);
+    result = await llmPredict(env, origin, { ...input, crossCheck: checkText, lang });
     result.sources = checkText;
   } catch (e) {
     const m = /LLM HTTP ([\w_]+)/.exec(e.message || "");
-    const fb = demoPredict(input.weather, input.moon);
+    const fb = demoPredict(input.weather, input.moon, input.lang === "en" ? "en" : "vi");
     // chi tiết lỗi để debug lúc testing (lọc key nếu có lọt vào)
     const raw = String((e && e.name ? e.name + ": " : "") + ((e && e.message) || e)).slice(0, 140);
     const safe = raw.replace(/sk-[A-Za-z0-9-_]+/g, "[key]").replace(/Bearer\s+[^\s]+/gi, "Bearer [key]");
@@ -260,7 +334,8 @@ export async function onRequestPost({ request, env, waitUntil }) {
   try { body = await request.json(); } catch { /* bỏ qua */ }
   const { weather = {}, moon = {}, history = null } = body;
   const lat = +body.lat, lon = +body.lon, gps = body.gps === true;
-  const jid = jobIdFor(lat, lon, gps);
+  const lang = body.lang === "en" ? "en" : "vi";
+  const jid = jobIdFor(lat, lon, gps, lang);
 
   // job đã xong trước đó (dedup) → trả ngay
   try {
@@ -273,10 +348,10 @@ export async function onRequestPost({ request, env, waitUntil }) {
 
   // chạy nền, trả jobId ngay để client poll
   try {
-    waitUntil(runJob(env, new URL(request.url).origin, jid, { weather, moon, history, lat, lon }));
+    waitUntil(runJob(env, new URL(request.url).origin, jid, { weather, moon, history, lat, lon, lang }));
   } catch {
     /* môi trường không hỗ trợ waitUntil → chạy đồng bộ */
-    await runJob(env, new URL(request.url).origin, jid, { weather, moon, history, lat, lon });
+    await runJob(env, new URL(request.url).origin, jid, { weather, moon, history, lat, lon, lang });
     const hit = await caches.default.match(jobKey(jid)).catch(() => null);
     if (hit) return Response.json(await hit.json());
   }

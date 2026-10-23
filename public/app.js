@@ -4,8 +4,115 @@
 const $ = (s) => document.querySelector(s);
 const state = { lat: null, lon: null, name: "", animId: null };
 
-/* mã thời tiết WMO → tiếng Việt */
-const WMO_DESC = {0:"Quang đãng",1:"Chủ yếu quang đãng",2:"Mây rải rác",3:"Âm u",45:"Sương mù",48:"Sương mù đóng băng",51:"Mưa phùn nhẹ",53:"Mưa phùn",55:"Mưa phùn dày",56:"Mưa phùn đóng băng",57:"Mưa phùn đóng băng",61:"Mưa nhẹ",63:"Mưa vừa",65:"Mưa to",66:"Mưa đóng băng",67:"Mưa đóng băng",71:"Tuyết nhẹ",73:"Tuyết",75:"Tuyết dày",77:"Tuyết hạt",80:"Mưa rào nhẹ",81:"Mưa rào vừa",82:"Mưa rào to",85:"Mưa tuyết",86:"Mưa tuyết",95:"Dông",96:"Dông kèm mưa đá",99:"Dông kèm mưa đá"};
+/* ---------- song ngữ VI/EN ---------- */
+let LANG = "vi";
+try { LANG = localStorage.getItem("fishing-lang") || "vi"; } catch {}
+const STR = {
+vi: {
+  docTitle: "Hôm nay cá có ăn không? — Dự đoán đi câu",
+  docDesc: "Dự đoán xem hôm nay cá có đi ăn không dựa trên thời tiết, áp suất, gió và pha mặt trăng.",
+  brandH1: "Cá có ăn không?", brandSub: "Dự đoán đi câu bằng thời tiết + mặt trăng",
+  step1: "Chọn điểm câu", tabSearch: "Tìm địa điểm", tabGps: "Vị trí của tôi",
+  searchPh: "Nhập tên hồ, sông, địa danh… vd: hồ Trị An", searchBtn: "Tìm",
+  gpsHint: "Dùng GPS của thiết bị để lấy tọa độ hiện tại của bạn.", gpsBtn: "Lấy vị trí hiện tại",
+  changePlace: "đổi", step2: "Dự đoán ngay lúc này", verdictLoading: "Đang xem thời tiết…",
+  legend1: "0–29 Ở nhà", legend2: "30–54 Hên xui", legend3: "55–74 Khá đấy", legend4: "75–100 Đi ngay",
+  step3: "Vì sao lại thế?",
+  aiNoteLive: "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế.",
+  aiNoteFallback: "AI chưa phản hồi — đang dùng thuật toán dự phòng.",
+  step4: "Biến động thời tiết", histHours: "5 giờ gần nhất", histDays: "5 ngày qua",
+  histNote: "AI dùng lịch sử này để đánh giá xu hướng (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...).",
+  footer: "Dữ liệu thời tiết: Open-Meteo · Pha trăng & giờ solunar tính tại chỗ",
+  searching: "Đang tìm…", noResult: "Không tìm thấy, thử tên khác nhé", netErr: "Lỗi mạng, thử lại nhé",
+  noGeo: "Thiết bị không hỗ trợ định vị.", gettingPos: "Đang lấy vị trí…",
+  posDenied: "Không lấy được vị trí — bạn đã từ chối quyền hoặc GPS yếu.",
+  myPos: (la, lo) => `Vị trí hiện tại (${la.toFixed(3)}, ${lo.toFixed(3)})`,
+  vLoadingT: "Đang xem thời tiết…", vLoadingS: "Đang tải dữ liệu…",
+  vNetErrT: "Lỗi mạng", vNetErrS: "Không tải được thời tiết, thử lại nhé.",
+  cachedNote: " (kết quả đã lưu, dưới 1 giờ)", errCode: (c) => ` (mã lỗi: ${c})`,
+  thHour: "Giờ", thTemp: "Nhiệt", thPressure: "Áp suất", thWind: "Gió", thCloud: "Mây", thRain: "Mưa",
+  thDate: "Ngày", thHiLo: "Cao/Thấp", thWeather: "Thời tiết",
+  compass: ["Bắc","Đông Bắc","Đông","Đông Nam","Nam","Tây Nam","Tây","Tây Bắc"],
+  moonNames: ["Trăng non","Lưỡi liềm đầu tháng","Bán nguyệt đầu tháng","Khuyết đầu tháng","Trăng tròn","Khuyết cuối tháng","Bán nguyệt cuối tháng","Lưỡi liềm cuối tháng"],
+  dGo: "ĐI CÂU NGAY!", dGoS: "Cá đang ăn mạnh — xách cần lên đường!",
+  dOk: "KHÁ ĐẤY", dOkS: "Có cơ hội tốt, canh đúng giờ vàng mà quất.",
+  dMeh: "HÊN XUI", dMehS: "Cá lười ăn, đi cho vui là chính, đừng kỳ vọng.",
+  dHome: "Ở NHÀ ĐI", dHomeS: "Hôm nay cá không thèm ăn — ở nhà đỡ phí mồi.",
+  dMoon: "Mặt trăng", dMoonD: (m) => `Giờ vàng solunar: ${m}`,
+  dPressure: "Áp suất", dPDown: "Đang giảm — cá thường ăn mạnh", dPUp: "Đang tăng nhanh", dPStable: "Ổn định",
+  dWind: "Gió", dWCalm: "Nhẹ, lý tưởng", dWMod: "Vừa phải", dWStrong: "Mạnh, khó câu",
+  dCloud: "Mây", dClIdeal: "Âm u nhẹ, cá dạn hơn", dClSun: "Nắng gắt", dClClear: "Trời quang", dClCloudy: "Nhiều mây",
+  dRain: "Mưa", dNoRain: "Không mưa",
+  dRainLight: (w) => `${w} — kích thích cá ăn`, dRainHeavy: (w) => `${w} — nước đục, kém ăn`, dDry: "Trời khô ráo",
+  dTemp: "Nhiệt độ", dTIdeal: "Vùng nhiệt cá ăn mạnh", dTOff: "Hơi lệch vùng lý tưởng",
+  dHum: "Độ ẩm", dHuHigh: "Ẩm cao — thường đi kèm âm u/sắp mưa", dHuNormal: "Bình thường", dHuDry: "Khô ráo",
+  dSolunar: "Giờ solunar", dGoldenNow: "Đang trong giờ vàng!", dGoldenLater: "Khung ăn mạnh trong ngày"
+},
+en: {
+  docTitle: "Are they biting today? — Fishing forecast",
+  docDesc: "Predict whether fish are biting today from weather, pressure, wind and moon phase.",
+  brandH1: "Are they biting?", brandSub: "Fishing forecast from weather + moon",
+  step1: "Pick your spot", tabSearch: "Search place", tabGps: "My location",
+  searchPh: "Lake, river, place name… e.g. Tri An lake", searchBtn: "Search",
+  gpsHint: "Use your device GPS to get your current coordinates.", gpsBtn: "Get current location",
+  changePlace: "change", step2: "Right-now forecast", verdictLoading: "Checking the weather…",
+  legend1: "0–29 Stay home", legend2: "30–54 Hit or miss", legend3: "55–74 Pretty good", legend4: "75–100 Go now",
+  step3: "Why?",
+  aiNoteLive: "Analyzed by AI from live weather data.",
+  aiNoteFallback: "AI didn't respond — using the fallback algorithm.",
+  step4: "Weather trends", histHours: "Last 5 hours", histDays: "Last 5 days",
+  histNote: "The AI uses this history to judge trends (pressure falling or rising, temperature up/down…).",
+  footer: "Weather data: Open-Meteo · Moon phase & solunar times computed on-device",
+  searching: "Searching…", noResult: "Not found, try another name", netErr: "Network error, try again",
+  noGeo: "Geolocation not supported on this device.", gettingPos: "Getting location…",
+  posDenied: "Couldn't get location — permission denied or weak GPS.",
+  myPos: (la, lo) => `Current location (${la.toFixed(3)}, ${lo.toFixed(3)})`,
+  vLoadingT: "Checking the weather…", vLoadingS: "Loading data…",
+  vNetErrT: "Network error", vNetErrS: "Couldn't load weather, try again.",
+  cachedNote: " (cached result, under 1 hour)", errCode: (c) => ` (error: ${c})`,
+  thHour: "Time", thTemp: "Temp", thPressure: "Pressure", thWind: "Wind", thCloud: "Cloud", thRain: "Rain",
+  thDate: "Date", thHiLo: "High/Low", thWeather: "Weather",
+  compass: ["N","NE","E","SE","S","SW","W","NW"],
+  moonNames: ["New moon","Waxing crescent","First quarter","Waxing gibbous","Full moon","Waning gibbous","Last quarter","Waning crescent"],
+  dGo: "GO FISHING!", dGoS: "Fish are biting hard — grab your rod!",
+  dOk: "PRETTY GOOD", dOkS: "Good chance, time it with the golden hour.",
+  dMeh: "HIT OR MISS", dMehS: "Fish are lazy; go for fun, keep expectations low.",
+  dHome: "STAY HOME", dHomeS: "Fish aren't biting today — save your bait.",
+  dMoon: "Moon", dMoonD: (m) => `Solunar majors: ${m}`,
+  dPressure: "Pressure", dPDown: "Falling — fish often feed hard", dPUp: "Rising fast", dPStable: "Steady",
+  dWind: "Wind", dWCalm: "Light, ideal", dWMod: "Moderate", dWStrong: "Strong, hard to fish",
+  dCloud: "Cloud", dClIdeal: "Light overcast, fish bolder", dClSun: "Harsh sun", dClClear: "Clear sky", dClCloudy: "Very cloudy",
+  dRain: "Rain", dNoRain: "No rain",
+  dRainLight: (w) => `${w} — triggers feeding`, dRainHeavy: (w) => `${w} — murky water, poor bite`, dDry: "Dry",
+  dTemp: "Temperature", dTIdeal: "Prime feeding temperature", dTOff: "Slightly off ideal range",
+  dHum: "Humidity", dHuHigh: "High humidity — often overcast/rain coming", dHuNormal: "Normal", dHuDry: "Dry",
+  dSolunar: "Solunar", dGoldenNow: "Right in the golden hour!", dGoldenLater: "Peak feeding windows today"
+}};
+const t = (k, ...a) => {
+  const v = (STR[LANG] && STR[LANG][k]) ?? STR.vi[k];
+  return typeof v === "function" ? v(...a) : (v ?? k);
+};
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.title = t("docTitle");
+  const md = document.querySelector('meta[name="description"]');
+  if (md) md.setAttribute("content", t("docDesc"));
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.setAttribute("placeholder", t(el.dataset.i18nPh)); });
+  const lb = $("#lang-btn"); if (lb) lb.textContent = LANG === "vi" ? "EN" : "VI";
+  try { localStorage.setItem("fishing-lang", LANG); } catch {}
+}
+$("#lang-btn").addEventListener("click", () => {
+  LANG = LANG === "vi" ? "en" : "vi";
+  applyLang();
+  if (state.lat != null) predict(); // dự đoán lại bằng ngôn ngữ mới
+});
+applyLang();
+
+/* mã thời tiết WMO, song ngữ */
+const WMO = {
+vi: {0:"Quang đãng",1:"Chủ yếu quang đãng",2:"Mây rải rác",3:"Âm u",45:"Sương mù",48:"Sương mù đóng băng",51:"Mưa phùn nhẹ",53:"Mưa phùn",55:"Mưa phùn dày",56:"Mưa phùn đóng băng",57:"Mưa phùn đóng băng",61:"Mưa nhẹ",63:"Mưa vừa",65:"Mưa to",66:"Mưa đóng băng",67:"Mưa đóng băng",71:"Tuyết nhẹ",73:"Tuyết",75:"Tuyết dày",77:"Tuyết hạt",80:"Mưa rào nhẹ",81:"Mưa rào vừa",82:"Mưa rào to",85:"Mưa tuyết",86:"Mưa tuyết",95:"Dông",96:"Dông kèm mưa đá",99:"Dông kèm mưa đá"},
+en: {0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Icy fog",51:"Light drizzle",53:"Drizzle",55:"Dense drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Moderate rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Light showers",81:"Moderate showers",82:"Violent showers",85:"Snow showers",86:"Snow showers",95:"Thunderstorm",96:"Storm with hail",99:"Storm with hail"}};
 
 /* ---------- tabs ---------- */
 document.querySelectorAll(".seg-btn").forEach((btn) => {
@@ -48,11 +155,11 @@ $("#search-input").addEventListener("keydown", (e) => { if (e.key === "Enter") d
 async function doSearch(q) {
   if (!q) return;
   const box = $("#search-results");
-  box.innerHTML = "<li><button disabled>Đang tìm…</button></li>";
+  box.innerHTML = `<li><button disabled>${escapeHtml(t("searching"))}</button></li>`;
   try {
-    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=vi&format=json`);
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=${LANG}&format=json`);
     const j = await r.json();
-    if (!j.results || !j.results.length) { box.innerHTML = "<li><button disabled>Không tìm thấy, thử tên khác nhé</button></li>"; return; }
+    if (!j.results || !j.results.length) { box.innerHTML = `<li><button disabled>${escapeHtml(t("noResult"))}</button></li>`; return; }
     box.innerHTML = "";
     j.results.forEach((p) => {
       const li = document.createElement("li");
@@ -62,22 +169,22 @@ async function doSearch(q) {
       b.addEventListener("click", () => choosePlace(p.latitude, p.longitude, `${p.name}${admin ? " — " + admin : ""}`));
       li.appendChild(b); box.appendChild(li);
     });
-  } catch { box.innerHTML = "<li><button disabled>Lỗi mạng, thử lại nhé</button></li>"; }
+  } catch { box.innerHTML = `<li><button disabled>${escapeHtml(t("netErr"))}</button></li>`; }
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
 /* ---------- 2) GPS ---------- */
 $("#gps-btn").addEventListener("click", () => {
   const st = $("#gps-status");
-  if (!navigator.geolocation) { st.textContent = "Thiết bị không hỗ trợ định vị."; return; }
-  st.textContent = "Đang lấy vị trí…";
+  if (!navigator.geolocation) { st.textContent = t("noGeo"); return; }
+  st.textContent = t("gettingPos");
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const { latitude, longitude } = pos.coords;
-      choosePlace(latitude, longitude, `Vị trí hiện tại (${latitude.toFixed(3)}, ${longitude.toFixed(3)})`, true);
+      choosePlace(latitude, longitude, t("myPos", latitude, longitude), true);
       st.textContent = "";
     },
-    () => { st.textContent = "Không lấy được vị trí — bạn đã từ chối quyền hoặc GPS yếu."; },
+    () => { st.textContent = t("posDenied"); },
     { timeout: 10000 }
   );
 });
@@ -91,7 +198,7 @@ function moonInfo(date = new Date()) {
   const days = date.getTime() / 86400000 - known;
   const age = ((days % synodic) + synodic) % synodic;
   const illum = (1 - Math.cos((2 * Math.PI * age) / synodic)) / 2;
-  const names = ["Trăng non","Lưỡi liềm đầu tháng","Bán nguyệt đầu tháng","Khuyết đầu tháng","Trăng tròn","Khuyết cuối tháng","Bán nguyệt cuối tháng","Lưỡi liềm cuối tháng"];
+  const names = t("moonNames");
   const idx = Math.floor(((age / synodic) * 8 + 0.5)) % 8;
   // giờ trăng lên đỉnh (ước tính): trăng non ~12h trưa, mỗi ngày trễ ~50 phút
   const transit = (12 + age * 0.841 + 24) % 24;
@@ -105,7 +212,7 @@ async function predict() {
   const scene = $("#scene-card"), factors = $("#factors-card");
   scene.classList.remove("hidden"); factors.classList.remove("hidden");
   scene.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  setVerdict("Đang xem thời tiết…", "Đang tải dữ liệu…", null);
+  setVerdict(t("vLoadingT"), t("vLoadingS"), null);
 
   let wx;
   try {
@@ -117,7 +224,7 @@ async function predict() {
       `&timezone=auto&forecast_days=1&past_days=5`
     );
     wx = await r.json();
-  } catch { setVerdict("Lỗi mạng", "Không tải được thời tiết, thử lại nhé.", 0); return; }
+  } catch { setVerdict(t("vNetErrT"), t("vNetErrS"), 0); return; }
 
   const c = wx.current, moon = moonInfo();
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
@@ -154,7 +261,7 @@ async function predict() {
   }
   let api = null;
   try {
-    api = await predictViaJob({ lat: state.lat, lon: state.lon, gps: state.gps, weather: c,
+    api = await predictViaJob({ lat: state.lat, lon: state.lon, gps: state.gps, lang: LANG, weather: c,
       moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) });
   } catch { /* fallback demo */ }
 
@@ -168,9 +275,8 @@ async function predict() {
   const nearGolden = Math.abs(nowH - sr) < 1 || Math.abs(nowH - ss) < 1;
   startSea(data.score, data.depth ?? feedingDepth(c, trend, nearGolden, nowH));
   $("#ai-note-text").textContent = api && !api.demo
-    ? "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế."
-    : "AI chưa phản hồi — đang dùng thuật toán dự phòng."
-      + (api && api.llmError ? ` (mã lỗi: ${api.llmError})` : "");
+    ? t("aiNoteLive")
+    : t("aiNoteFallback") + (api && api.llmError ? t("errCode", api.llmError) : "");
 }
 
 /* thuật toán demo — sẽ thay bằng LLM */
@@ -185,7 +291,7 @@ function demoScore(c, wx, moon, nowH) {
   const prox = Math.min(moon.illum, 1 - moon.illum); // gần non/tròn
   const moonPts = Math.round(25 * (1 - prox * 2));
   s += moonPts;
-  chips.push({ k: "Mặt trăng", v: `${moon.phaseName} · ${Math.round(moon.illum * 100)}%`, d: `Giờ vàng solunar: ${moon.major.join(" & ")}`, cls: moonPts >= 17 ? "good" : moonPts >= 10 ? "warn" : "bad" });
+  chips.push({ k: t("dMoon"), v: `${moon.phaseName} · ${Math.round(moon.illum * 100)}%`, d: t("dMoonD", moon.major.join(" & ")), cls: moonPts >= 17 ? "good" : moonPts >= 10 ? "warn" : "bad" });
 
   // áp suất 25đ (+xu hướng)
   const p = c.pressure_msl;
@@ -194,56 +300,56 @@ function demoScore(c, wx, moon, nowH) {
   let pPts = p >= 1013 && p <= 1022 ? 20 : (p >= 1005 && p < 1013) || (p > 1022 && p <= 1030) ? 12 : 6;
   if (trend < -1) pPts += 5; // đang giảm: cá ăn tích cực trước mưa
   pPts = Math.min(25, pPts); s += pPts;
-  chips.push({ k: "Áp suất", v: `${Math.round(p)} hPa`, d: trend < -1 ? "Đang giảm — cá thường ăn mạnh" : trend > 1 ? "Đang tăng nhanh" : "Ổn định", cls: pPts >= 17 ? "good" : pPts >= 10 ? "warn" : "bad" });
+  chips.push({ k: t("dPressure"), v: `${Math.round(p)} hPa`, d: trend < -1 ? t("dPDown") : trend > 1 ? t("dPUp") : t("dPStable"), cls: pPts >= 17 ? "good" : pPts >= 10 ? "warn" : "bad" });
 
   // gió 15đ
   const w = c.wind_speed_10m;
   const wPts = w < 10 ? 15 : w < 20 ? 10 : w < 30 ? 5 : 2; s += wPts;
-  const wdirs = ["Bắc", "Đông Bắc", "Đông", "Đông Nam", "Nam", "Tây Nam", "Tây", "Tây Bắc"];
+  const wdirs = t("compass");
   const wdirName = c.wind_direction_10m == null ? "" : wdirs[Math.round(c.wind_direction_10m / 45) % 8];
-  chips.push({ k: "Gió", v: `${Math.round(w)} km/h${wdirName ? " · " + wdirName : ""}`,
-    d: w < 10 ? "Nhẹ, lý tưởng" : w < 20 ? "Vừa phải" : "Mạnh, khó câu",
+  chips.push({ k: t("dWind"), v: `${Math.round(w)} km/h${wdirName ? " · " + wdirName : ""}`,
+    d: w < 10 ? t("dWCalm") : w < 20 ? t("dWMod") : t("dWStrong"),
     cls: wPts >= 10 ? "good" : wPts >= 5 ? "warn" : "bad" });
 
   // mây 10đ
   const cl = c.cloud_cover;
   const clPts = cl >= 20 && cl <= 60 ? 10 : cl < 20 ? 6 : cl <= 90 ? 7 : 4; s += clPts;
-  chips.push({ k: "Mây", v: `${cl}%`, d: cl >= 20 && cl <= 60 ? "Âm u nhẹ, cá dạn hơn" : cl < 20 ? (isDay ? "Nắng gắt" : "Trời quang") : "Nhiều mây", cls: clPts >= 8 ? "good" : "warn" });
+  chips.push({ k: t("dCloud"), v: `${cl}%`, d: cl >= 20 && cl <= 60 ? t("dClIdeal") : cl < 20 ? (isDay ? t("dClSun") : t("dClClear")) : t("dClCloudy"), cls: clPts >= 8 ? "good" : "warn" });
 
   const pr = c.precipitation ?? 0;
-  const wmo = WMO_DESC[c.weather_code] ?? "";
-  chips.push({ k: "Mưa", v: pr > 0 ? `${pr} mm` : "Không mưa",
-    d: pr > 0 && pr <= 2.5 ? `${wmo} — kích thích cá ăn` : pr > 2.5 ? `${wmo} — nước đục, kém ăn` : (wmo || "Trời khô ráo"),
+  const wmo = WMO[LANG][c.weather_code] ?? "";
+  chips.push({ k: t("dRain"), v: pr > 0 ? `${pr} mm` : t("dNoRain"),
+    d: pr > 0 && pr <= 2.5 ? t("dRainLight", wmo) : pr > 2.5 ? t("dRainHeavy", wmo) : (wmo || t("dDry")),
     cls: pr > 0 && pr <= 2.5 ? "good" : pr > 2.5 ? "bad" : "" });
 
   // nhiệt độ 15đ
   const t = c.temperature_2m;
   const tPts = t >= 24 && t <= 30 ? 15 : (t >= 20 && t < 24) || (t > 30 && t <= 33) ? 10 : 5; s += tPts;
-  chips.push({ k: "Nhiệt độ", v: `${Math.round(t)}°C`, d: t >= 24 && t <= 30 ? "Vùng nhiệt cá ăn mạnh" : "Hơi lệch vùng lý tưởng", cls: tPts >= 12 ? "good" : tPts >= 8 ? "warn" : "bad" });
+  chips.push({ k: t("dTemp"), v: `${Math.round(t)}°C`, d: t >= 24 && t <= 30 ? t("dTIdeal") : t("dTOff"), cls: tPts >= 12 ? "good" : tPts >= 8 ? "warn" : "bad" });
 
   // độ ẩm: chỉ hiển thị tham khảo (không tính điểm — độ ẩm không tác động trực tiếp lên cá,
   // chỉ là dấu hiệu kèm theo của mưa/âm u, mà 2 yếu tố đó đã được chấm điểm riêng)
   const hu = c.relative_humidity_2m;
-  chips.push({ k: "Độ ẩm", v: `${hu}%`,
-    d: hu >= 85 ? "Ẩm cao — thường đi kèm âm u/sắp mưa" : hu >= 60 ? "Bình thường" : "Khô ráo",
+  chips.push({ k: t("dHum"), v: `${hu}%`,
+    d: hu >= 85 ? t("dHuHigh") : hu >= 60 ? t("dHuNormal") : t("dHuDry"),
     cls: hu >= 85 ? "warn" : "" });
 
   // giờ vàng bình minh/hoàng hôn 10đ
   const nearGolden = Math.abs(nowH - sr0) < 1 || Math.abs(nowH - ss0) < 1;
   s += nearGolden ? 10 : 3;
-  chips.push({ k: "Giờ solunar", v: moon.major.join(" & "), d: nearGolden ? "Đang trong giờ vàng!" : "Khung ăn mạnh trong ngày", cls: nearGolden ? "good" : "warn" });
+  chips.push({ k: t("dSolunar"), v: moon.major.join(" & "), d: nearGolden ? t("dGoldenNow") : t("dGoldenLater"), cls: nearGolden ? "good" : "warn" });
 
   s = Math.min(100, Math.round(s));
-  const verdict = s >= 75 ? ["ĐI CÂU NGAY!", "Cá đang ăn mạnh — xách cần lên đường!"]
-    : s >= 55 ? ["KHÁ ĐẤY", "Có cơ hội tốt, canh đúng giờ vàng mà quất."]
-    : s >= 30 ? ["HÊN XUI", "Cá lười ăn, đi cho vui là chính, đừng kỳ vọng."] 
-    : ["Ở NHÀ ĐI", "Hôm nay cá không thèm ăn — ở nhà đỡ phí mồi."];
+  const verdict = s >= 75 ? [t("dGo"), t("dGoS")]
+    : s >= 55 ? [t("dOk"), t("dOkS")]
+    : s >= 30 ? [t("dMeh"), t("dMehS")]
+    : [t("dHome"), t("dHomeS")];
   return { score: s, title: verdict[0], sub: verdict[1], chips, demo: true };
 }
 
 function renderResult(data, c, moon) {
   animateScore(data.score);
-  setVerdict(data.title, data.sub + (data.cached ? " (kết quả đã lưu, dưới 1 giờ)" : ""), data.score);
+  setVerdict(data.title, data.sub + (data.cached ? t("cachedNote") : ""), data.score);
   const box = $("#chips"); box.innerHTML = "";
   (data.chips || []).forEach((ch) => {
     const d = document.createElement("div");
@@ -286,7 +392,7 @@ function historyData(wx) {
       tmax: Math.round(wx.daily.temperature_2m_max[i]),
       tmin: Math.round(wx.daily.temperature_2m_min[i]),
       precip: +wx.daily.precipitation_sum[i].toFixed(1),
-      wmo: WMO_DESC[wx.daily.weather_code[i]] || "—",
+      wmoCode: wx.daily.weather_code[i],
     });
   }
   return { hours, days };
@@ -297,16 +403,16 @@ function renderHistory(wx) {
   const card = $("#history-card");
   card.classList.remove("hidden");
   $("#hist-hours").innerHTML =
-    "<thead><tr><th>Giờ</th><th>Nhiệt</th><th>Áp suất</th><th>Gió</th><th>Mây</th><th>Mưa</th></tr></thead><tbody>" +
+    `<thead><tr><th>${t("thHour")}</th><th>${t("thTemp")}</th><th>${t("thPressure")}</th><th>${t("thWind")}</th><th>${t("thCloud")}</th><th>${t("thRain")}</th></tr></thead><tbody>` +
     hours.map((h) =>
       `<tr><td>${h.time}</td><td>${h.temp}°C</td><td>${h.pressure} hPa</td>` +
       `<td>${h.wind} km/h</td><td>${h.cloud}%</td><td>${h.precip > 0 ? h.precip + " mm" : "—"}</td></tr>`
     ).join("") + "</tbody>";
   $("#hist-days").innerHTML =
-    "<thead><tr><th>Ngày</th><th>Cao/Thấp</th><th>Mưa</th><th>Thời tiết</th></tr></thead><tbody>" +
+    `<thead><tr><th>${t("thDate")}</th><th>${t("thHiLo")}</th><th>${t("thRain")}</th><th>${t("thWeather")}</th></tr></thead><tbody>` +
     days.map((d) =>
       `<tr><td>${d.label}</td><td>${d.tmax}° / ${d.tmin}°</td>` +
-      `<td>${d.precip > 0 ? d.precip + " mm" : "—"}</td><td>${escapeHtml(d.wmo)}</td></tr>`
+      `<td>${d.precip > 0 ? d.precip + " mm" : "—"}</td><td>${escapeHtml(WMO[LANG][d.wmoCode] ?? "—")}</td></tr>`
     ).join("") + "</tbody>";
 }
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, shrink-to-fit=no" />
-<title>Hôm nay cá có ăn không? — Dự đoán đi câu</title>
+<title data-i18n="docTitle">Hôm nay cá có ăn không? — Dự đoán đi câu</title>
 <meta name="description" content="Dự đoán xem hôm nay cá có đi ăn không dựa trên thời tiết, áp suất, gió và pha mặt trăng." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,46 +26,47 @@
       <circle cx="26.5" cy="4.2" r=".9" fill="#3ee6c4" opacity=".35"/>
     </svg>
     <div>
-      <h1>Cá có ăn không?</h1>
-      <p>Dự đoán đi câu bằng thời tiết + mặt trăng</p>
+      <h1 data-i18n="brandH1">Cá có ăn không?</h1>
+      <p data-i18n="brandSub">Dự đoán đi câu bằng thời tiết + mặt trăng</p>
     </div>
   </div>
+  <button id="lang-btn" class="lang-btn" aria-label="English / Tiếng Việt">EN</button>
 </header>
 
 <main>
   <!-- ============ LOCATION ============ -->
   <section class="card location-card">
-    <h2><span class="step">1</span> Chọn điểm câu</h2>
+    <h2><span class="step">1</span> <span data-i18n="step1">Chọn điểm câu</span></h2>
     <div class="seg" role="tablist" aria-label="Cách chọn vị trí">
-      <button class="seg-btn active" data-tab="search" role="tab" aria-selected="true">Tìm địa điểm</button>
-      <button class="seg-btn" data-tab="gps" role="tab" aria-selected="false">Vị trí của tôi</button>
+      <button class="seg-btn active" data-tab="search" role="tab" aria-selected="true" data-i18n="tabSearch">Tìm địa điểm</button>
+      <button class="seg-btn" data-tab="gps" role="tab" aria-selected="false" data-i18n="tabGps">Vị trí của tôi</button>
     </div>
 
     <div class="tab-panel active" id="panel-search">
       <div class="search-row">
-        <input id="search-input" type="text" placeholder="Nhập tên hồ, sông, địa danh… vd: hồ Trị An" autocomplete="off" />
-        <button id="search-btn" class="btn-primary">Tìm</button>
+        <input id="search-input" type="text" placeholder="Nhập tên hồ, sông, địa danh… vd: hồ Trị An" data-i18n-ph="searchPh" autocomplete="off" />
+        <button id="search-btn" class="btn-primary" data-i18n="searchBtn">Tìm</button>
       </div>
       <ul id="search-results" class="results"></ul>
     </div>
 
     <div class="tab-panel" id="panel-gps">
-      <p class="hint">Dùng GPS của thiết bị để lấy tọa độ hiện tại của bạn.</p>
-      <button id="gps-btn" class="btn-primary">Lấy vị trí hiện tại</button>
+      <p class="hint" data-i18n="gpsHint">Dùng GPS của thiết bị để lấy tọa độ hiện tại của bạn.</p>
+      <button id="gps-btn" class="btn-primary" data-i18n="gpsBtn">Lấy vị trí hiện tại</button>
       <p id="gps-status" class="status"></p>
     </div>
 
     <div id="chosen-place" class="chosen-place hidden">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></svg>
       <span id="chosen-place-name">—</span>
-      <button id="change-place" class="link-btn">đổi</button>
+      <button id="change-place" class="link-btn" data-i18n="changePlace">đổi</button>
     </div>
 
   </section>
 
   <!-- ============ PREDICTION SCENE ============ -->
   <section class="card scene-card hidden" id="scene-card">
-    <h2><span class="step">2</span> Dự đoán ngay lúc này</h2>
+    <h2><span class="step">2</span> <span data-i18n="step2">Dự đoán ngay lúc này</span></h2>
     <div class="scene">
       <canvas id="sea"></canvas>
       <div class="scene-overlay">
@@ -85,42 +86,42 @@
         </div>
         <div class="verdict" id="verdict">
           <div class="verdict-title" id="verdict-title">—</div>
-          <p class="verdict-sub" id="verdict-sub">Đang xem thời tiết…</p>
+          <p class="verdict-sub" id="verdict-sub" data-i18n="verdictLoading">Đang xem thời tiết…</p>
         </div>
       </div>
     </div>
     <div class="scale-legend" aria-hidden="true">
-      <span style="--c:#ff6b6b">0–29 Ở nhà</span>
-      <span style="--c:#f5b942">30–54 Hên xui</span>
-      <span style="--c:#a3e635">55–74 Khá đấy</span>
-      <span style="--c:#3ee6c4">75–100 Đi ngay</span>
+      <span style="--c:#ff6b6b" data-i18n="legend1">0–29 Ở nhà</span>
+      <span style="--c:#f5b942" data-i18n="legend2">30–54 Hên xui</span>
+      <span style="--c:#a3e635" data-i18n="legend3">55–74 Khá đấy</span>
+      <span style="--c:#3ee6c4" data-i18n="legend4">75–100 Đi ngay</span>
     </div>
   </section>
 
   <!-- ============ FACTORS ============ -->
   <section class="card factors-card hidden" id="factors-card">
-    <h2><span class="step">3</span> Vì sao lại thế?</h2>
+    <h2><span class="step">3</span> <span data-i18n="step3">Vì sao lại thế?</span></h2>
     <div class="chips" id="chips"></div>
     <div class="ai-note">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2-6.3-4.5-6.3 4.5L8 13.8 2 9.2h7.6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-      <p id="ai-note-text">Kết quả do AI phân tích từ dữ liệu thời tiết thực tế.</p>
+      <p id="ai-note-text" data-i18n="aiNoteLive">Kết quả do AI phân tích từ dữ liệu thời tiết thực tế.</p>
     </div>
   </section>
   <!-- ============ HISTORY ============ -->
   <section class="card history-card hidden" id="history-card">
-    <h2><span class="step">4</span> Biến động thời tiết</h2>
-    <h3 class="hist-title">5 giờ gần nhất</h3>
+    <h2><span class="step">4</span> <span data-i18n="step4">Biến động thời tiết</span></h2>
+    <h3 class="hist-title" data-i18n="histHours">5 giờ gần nhất</h3>
     <div class="hist-scroll"><table class="hist-table" id="hist-hours"></table></div>
-    <h3 class="hist-title">5 ngày qua</h3>
+    <h3 class="hist-title" data-i18n="histDays">5 ngày qua</h3>
     <div class="hist-scroll"><table class="hist-table" id="hist-days"></table></div>
-    <p class="hist-note">AI dùng lịch sử này để đánh giá xu hướng (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...).</p>
+    <p class="hist-note" data-i18n="histNote">AI dùng lịch sử này để đánh giá xu hướng (áp suất đang giảm hay tăng, nhiệt độ lên/xuống...).</p>
   </section>
 </main>
 
 <footer>
-  <p>Dữ liệu thời tiết: Open-Meteo · Pha trăng &amp; giờ solunar tính tại chỗ</p>
+  <p data-i18n="footer">Dữ liệu thời tiết: Open-Meteo · Pha trăng &amp; giờ solunar tính tại chỗ</p>
 </footer>
 
-<script src="app.js?v=20261023h"></script>
+<script src="app.js?v=20261023i"></script>
 </body>
 </html>

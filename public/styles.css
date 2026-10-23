@@ -52,6 +52,14 @@ body {
 .brand-mark { width: 44px; height: 44px; filter: drop-shadow(0 0 10px rgba(62,230,196,.5)); }
 .brand h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -.01em; }
 .brand p { font-size: .82rem; color: var(--muted); }
+.lang-btn {
+  font: inherit; font-weight: 700; font-size: .85rem;
+  color: var(--glow); background: rgba(62,230,196,.08);
+  border: 1px solid rgba(62,230,196,.35); border-radius: 999px;
+  padding: 8px 16px; cursor: pointer; flex-shrink: 0;
+  transition: background .2s, box-shadow .2s;
+}
+.lang-btn:hover { background: rgba(62,230,196,.16); box-shadow: 0 0 14px rgba(62,230,196,.25); }
 
 main { max-width: 860px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px) 40px; display: grid; gap: 20px; }
 main > * { min-width: 0; } /* cho phép card co nhỏ hơn nội dung (bảng 480px) trên mobile */
