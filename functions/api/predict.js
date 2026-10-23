@@ -244,7 +244,10 @@ async function runJob(env, origin, jid, input) {
   } catch (e) {
     const m = /LLM HTTP ([\w_]+)/.exec(e.message || "");
     const fb = demoPredict(input.weather, input.moon);
-    result = { ...fb, llmError: m ? `http_${m[1]}` : "llm_error" };
+    // chi tiết lỗi để debug lúc testing (lọc key nếu có lọt vào)
+    const raw = String((e && e.name ? e.name + ": " : "") + ((e && e.message) || e)).slice(0, 140);
+    const safe = raw.replace(/sk-[A-Za-z0-9-_]+/g, "[key]").replace(/Bearer\s+[^\s]+/gi, "Bearer [key]");
+    result = { ...fb, llmError: m ? `http_${m[1]}` : `llm_error:${safe}` };
   }
   try {
     await caches.default.put(jobKey(jid), jsonCache({ ...result, status: "done", jobId: jid }));
