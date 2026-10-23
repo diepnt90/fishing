@@ -16,6 +16,7 @@ vi: {
   searchPh: "Nhập tên hồ, sông, địa danh… vd: hồ Trị An", searchBtn: "Tìm",
   gpsHint: "Dùng GPS của thiết bị để lấy tọa độ hiện tại của bạn.", gpsBtn: "Lấy vị trí hiện tại",
   changePlace: "đổi", step2: "Dự đoán ngay lúc này", verdictLoading: "Đang xem thời tiết…",
+  verdictMore: "Xem thêm ▾", verdictLess: "Thu gọn ▴",
   legend1: "0–29 Ở nhà", legend2: "30–54 Hên xui", legend3: "55–74 Khá đấy", legend4: "75–100 Đi ngay",
   step3: "Vì sao lại thế?",
   aiNoteLive: "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế.",
@@ -57,6 +58,7 @@ en: {
   searchPh: "Lake, river, place name… e.g. Tri An lake", searchBtn: "Search",
   gpsHint: "Use your device GPS to get your current coordinates.", gpsBtn: "Get current location",
   changePlace: "change", step2: "Right-now forecast", verdictLoading: "Checking the weather…",
+  verdictMore: "Show more ▾", verdictLess: "Show less ▴",
   legend1: "0–29 Stay home", legend2: "30–54 Hit or miss", legend3: "55–74 Pretty good", legend4: "75–100 Go now",
   step3: "Why?",
   aiNoteLive: "Analyzed by AI from live weather data.",
@@ -102,8 +104,15 @@ function applyLang() {
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.setAttribute("placeholder", t(el.dataset.i18nPh)); });
   document.querySelectorAll("#lang-btn .flag").forEach((f) => f.classList.toggle("active", f.dataset.lang === LANG));
+  const vm = $("#verdict-more");
+  if (vm && !vm.hidden) vm.textContent = t($("#verdict-sub").classList.contains("expanded") ? "verdictLess" : "verdictMore");
   try { localStorage.setItem("fishing-lang", LANG); } catch {}
 }
+$("#verdict-more").addEventListener("click", () => {
+  const subEl = $("#verdict-sub");
+  const open = subEl.classList.toggle("expanded");
+  $("#verdict-more").textContent = t(open ? "verdictLess" : "verdictMore");
+});
 $("#lang-btn").addEventListener("click", () => {
   LANG = LANG === "vi" ? "en" : "vi";
   applyLang();
@@ -376,7 +385,16 @@ function renderResult(data, c, moon) {
 
 function setVerdict(title, sub, score) {
   $("#verdict-title").textContent = title;
-  $("#verdict-sub").textContent = sub;
+  const subEl = $("#verdict-sub"), moreBtn = $("#verdict-more");
+  subEl.textContent = sub;
+  subEl.classList.remove("expanded");
+  moreBtn.hidden = true;
+  // chỉ hiện nút "xem thêm" khi chữ thật sự bị cắt bớt
+  requestAnimationFrame(() => {
+    const cut = subEl.scrollHeight > subEl.clientHeight + 1;
+    moreBtn.hidden = !cut;
+    if (cut) moreBtn.textContent = t("verdictMore");
+  });
   const el = $("#verdict-title");
   el.style.color = score == null ? "var(--ink)" : score >= 75 ? "var(--glow)" : score >= 55 ? "var(--lime)" : score >= 30 ? "var(--amber)" : "var(--coral)";
   el.style.textShadow = `0 0 34px ${score == null ? "transparent" : score >= 75 ? "rgba(62,230,196,.55)" : score >= 55 ? "rgba(163,230,53,.45)" : score >= 30 ? "rgba(245,185,66,.45)" : "rgba(255,107,107,.45)"}`;
