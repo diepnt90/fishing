@@ -101,7 +101,7 @@ function applyLang() {
   if (md) md.setAttribute("content", t("docDesc"));
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.setAttribute("placeholder", t(el.dataset.i18nPh)); });
-  const lb = $("#lang-btn"); if (lb) lb.textContent = LANG === "vi" ? "EN" : "VI";
+  document.querySelectorAll("#lang-btn .flag").forEach((f) => f.classList.toggle("active", f.dataset.lang === LANG));
   try { localStorage.setItem("fishing-lang", LANG); } catch {}
 }
 $("#lang-btn").addEventListener("click", () => {
