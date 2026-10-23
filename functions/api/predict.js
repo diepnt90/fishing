@@ -11,7 +11,7 @@
  */
 
 const CACHE_ENABLED = true; // dedup job theo lưới+khung giờ (~1h); false: testing, mỗi request 1 job mới
-const LLM_MODEL = "gpt-5-nano";
+const LLM_MODEL = "gpt-5-mini";
 
 /* chuỗi dùng chung, song ngữ */
 const T = {
