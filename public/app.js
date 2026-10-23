@@ -122,26 +122,39 @@ async function predict() {
   const c = wx.current, moon = moonInfo();
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
 
-  // thử gọi API dự đoán (Cloudflare Function); lỗi/kẹt thì thử lại 1 lần, vẫn lỗi → demo tại chỗ
-  async function postPredict(payload) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const ctl = new AbortController();
-      const t = setTimeout(() => ctl.abort(), 15000);
+  // gọi API dự đoán kiểu job: POST tạo job (trả về ngay) rồi poll GET mỗi 2s.
+  // Mỗi poll là request nhẹ độc lập — hụt thì poll lại, không treo như chờ 1 request dài.
+  const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+  async function predictViaJob(payload) {
+    let job = null;
+    for (let a = 0; a < 2 && !job; a++) { // POST nhanh, thử lại 1 lần nếu kẹt
       try {
         const r = await fetch("/api/predict", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          signal: ctl.signal, body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(10000), body: JSON.stringify(payload),
         });
-        clearTimeout(t);
-        if (r.ok) return await r.json();
-      } catch { clearTimeout(t); }
-      if (attempt === 0) await new Promise((res) => setTimeout(res, 1500));
+        if (r.ok) job = await r.json();
+      } catch { /* thử lại */ }
+      if (!job && a === 0) await sleep(1500);
+    }
+    if (!job) return null;
+    if (job.status === "done") return job; // trúng job đã xong (dedup)
+    for (let i = 0; i < 30; i++) { // poll tối đa ~60s
+      await sleep(2000);
+      try {
+        const pr = await fetch(`/api/predict?job=${encodeURIComponent(job.jobId)}`,
+          { signal: AbortSignal.timeout(10000) });
+        if (!pr.ok) continue;
+        const pj = await pr.json();
+        if (pj.status === "done") return pj;
+        if (pj.status === "error") return null;
+      } catch { /* poll hụt → poll tiếp */ }
     }
     return null;
   }
   let api = null;
   try {
-    api = await postPredict({ lat: state.lat, lon: state.lon, gps: state.gps, weather: c,
+    api = await predictViaJob({ lat: state.lat, lon: state.lon, gps: state.gps, weather: c,
       moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) });
   } catch { /* fallback demo */ }
 

@@ -1,24 +1,35 @@
 /**
- * POST /api/predict — endpoint dự đoán (Cloudflare Pages Function).
+ * POST /api/predict — tạo job dự đoán, trả về ngay { jobId, status: "pending" }.
+ * GET  /api/predict?job=<id> — poll kết quả: { status: "pending" } hoặc { status: "done", ... }.
  *
- * Luồng chính: gọi LLM (GPT-5 nano) với prompt gồm skill kiến thức câu cá
- * + số liệu thời tiết hiện tại + pha trăng/solunar + lịch sử 5 giờ & 5 ngày.
- * Nếu không có LLM_API_KEY hoặc gọi lỗi → fallback về heuristic demo để UI không vỡ.
+ * Kiểu job bất đồng bộ: POST nhanh nên khó bị treo/hủy giữa chừng;
+ * client poll bằng các GET nhẹ — hụt thì poll lại thoải mái.
+ * Việc nặng (gọi LLM) chạy nền qua waitUntil.
  *
  * Secrets (Cloudflare, loại Secret, không commit):
  *   LLM_API_KEY — key OpenAI
  */
 
-const CACHE_ENABLED = false; // đang testing → tắt; xong bật lại true
+const CACHE_ENABLED = false; // testing: mỗi request là 1 job mới; true: dedup job theo lưới+khung giờ (~1h)
 const LLM_MODEL = "gpt-5-nano";
 
-/* Cache 1 giờ: tìm địa điểm → lưới 0.02° (~2km); GPS → lưới 0.45° (~50km) */
+/* lưới cache: tìm địa điểm → 0.02° (~2km); GPS → 0.45° (~50km) */
 function cacheGrid(lat, lon, gps) {
   const step = gps ? 0.45 : 0.02;
   const dec = step < 0.1 ? 2 : 1;
   const r = (v) => (Math.round(v / step) * step).toFixed(dec);
   return `${r(lat)},${r(lon)}`;
 }
+function jobIdFor(lat, lon, gps) {
+  const grid = cacheGrid(lat, lon, gps);
+  if (!CACHE_ENABLED) return `${grid}|${Date.now()}|${Math.random().toString(36).slice(2, 8)}`;
+  return `${grid}|${Math.floor(Date.now() / 3600000)}`; // dedup ~1 giờ
+}
+const jobKey = (jid) => new Request(`https://cache.local/api/job?k=${encodeURIComponent(jid)}`);
+const jsonCache = (obj, maxAge = 3600) =>
+  new Response(JSON.stringify(obj), {
+    headers: { "content-type": "application/json", "cache-control": `public, max-age=${maxAge}` },
+  });
 
 function demoPredict(weather, moon) {
   const t = weather.temperature_2m ?? 28;
@@ -58,10 +69,10 @@ function demoPredict(weather, moon) {
   };
 }
 
-async function llmPredict(env, request, { weather, moon, history, lat, lon }) {
+async function llmPredict(env, origin, { weather, moon, history, lat, lon }) {
   let skill = "";
   try {
-    const sr = await fetch(new URL("/skills/kinh-nghiem-cau-ca.md", request.url));
+    const sr = await fetch(`${origin}/skills/kinh-nghiem-cau-ca.md`);
     if (sr.ok) skill = await sr.text();
   } catch { /* thiếu skill vẫn dự đoán được */ }
 
@@ -117,46 +128,56 @@ async function llmPredict(env, request, { weather, moon, history, lat, lon }) {
   return { score, title: String(v.title || ""), sub: String(v.sub || ""), chips, depth, demo: false };
 }
 
-export async function onRequestPost({ request, env }) {
+/* chạy nền: gọi LLM rồi cất kết quả vào cache để poll đọc */
+async function runJob(env, origin, jid, input) {
+  let result;
+  try {
+    if (!env.LLM_API_KEY) throw new Error("LLM HTTP no_key");
+    result = await llmPredict(env, origin, input);
+  } catch (e) {
+    const m = /LLM HTTP ([\w_]+)/.exec(e.message || "");
+    const fb = demoPredict(input.weather, input.moon);
+    result = { ...fb, llmError: m ? `http_${m[1]}` : "llm_error" };
+  }
+  try {
+    await caches.default.put(jobKey(jid), jsonCache({ ...result, status: "done", jobId: jid }));
+  } catch { /* bỏ qua */ }
+}
+
+export async function onRequestPost({ request, env, waitUntil }) {
   let body = {};
   try { body = await request.json(); } catch { /* bỏ qua */ }
   const { weather = {}, moon = {}, history = null } = body;
   const lat = +body.lat, lon = +body.lon, gps = body.gps === true;
+  const jid = jobIdFor(lat, lon, gps);
 
-  const cache = caches.default;
-  const cacheReq = new Request(
-    `https://cache.local/api/predict?k=${encodeURIComponent(cacheGrid(lat, lon, gps))}`);
-  if (CACHE_ENABLED) {
-    try {
-      const hit = await cache.match(cacheReq);
-      if (hit) return Response.json({ ...(await hit.json()), cached: true });
-    } catch { /* cache lỗi thì tính lại */ }
-  }
-
-  let payload = null;
-  let llmError = null;
-  if (!env.LLM_API_KEY) {
-    llmError = "no_key";
-  } else {
-    try {
-      payload = await llmPredict(env, request, { weather, moon, history, lat, lon });
-    } catch (e) {
-      const m = /LLM HTTP (\d+)/.exec(e.message || "");
-      llmError = m ? `http_${m[1]}` : "llm_error";
-      console.log("LLM failed, fallback demo:", e.message);
+  // job đã xong trước đó (dedup) → trả ngay
+  try {
+    const hit = await caches.default.match(jobKey(jid));
+    if (hit) {
+      const done = await hit.json();
+      if (done.status === "done") return Response.json({ ...done, cached: true });
     }
-  }
-  if (!payload) {
-    payload = demoPredict(weather, moon);
-    if (llmError) payload.llmError = llmError; // debug lúc testing, không lộ key
-  }
+  } catch { /* bỏ qua */ }
 
-  if (CACHE_ENABLED) {
-    try {
-      await cache.put(cacheReq, new Response(JSON.stringify(payload), {
-        headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" },
-      }));
-    } catch { /* bỏ qua */ }
+  // chạy nền, trả jobId ngay để client poll
+  try {
+    waitUntil(runJob(env, new URL(request.url).origin, jid, { weather, moon, history, lat, lon }));
+  } catch {
+    /* môi trường không hỗ trợ waitUntil → chạy đồng bộ */
+    await runJob(env, new URL(request.url).origin, jid, { weather, moon, history, lat, lon });
+    const hit = await caches.default.match(jobKey(jid)).catch(() => null);
+    if (hit) return Response.json(await hit.json());
   }
-  return Response.json(payload);
+  return Response.json({ jobId: jid, status: "pending", demo: false });
+}
+
+export async function onRequestGet({ request }) {
+  const jid = new URL(request.url).searchParams.get("job");
+  if (!jid) return Response.json({ status: "error", message: "missing job" }, { status: 400 });
+  try {
+    const hit = await caches.default.match(jobKey(jid));
+    if (hit) return Response.json(await hit.json());
+  } catch { /* bỏ qua */ }
+  return Response.json({ status: "pending" });
 }
