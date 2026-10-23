@@ -167,14 +167,10 @@ async function predict() {
   const sr = toH(wx.daily.sunrise[0]), ss = toH(wx.daily.sunset[0]);
   const nearGolden = Math.abs(nowH - sr) < 1 || Math.abs(nowH - ss) < 1;
   startSea(data.score, data.depth ?? feedingDepth(c, trend, nearGolden, nowH));
-  const demoBase = "Đang ở chế độ demo: điểm số tính bằng thuật toán thử nghiệm. Bản chính thức sẽ gửi dữ liệu này lên LLM để phân tích.";
   $("#ai-note-text").textContent = api && !api.demo
     ? "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế."
-    : api && api.llmError ? demoBase + ` (mã lỗi AI: ${api.llmError})`
-    : api ? demoBase + " (API trả demo nhưng không có mã lỗi)"
-    : demoBase + " (không gọi được API /api/predict)";
-  const badge = document.querySelector(".demo-badge");
-  if (badge) badge.style.display = (api && !api.demo) ? "none" : "";
+    : "AI chưa phản hồi — đang dùng thuật toán dự phòng."
+      + (api && api.llmError ? ` (mã lỗi: ${api.llmError})` : "");
 }
 
 /* thuật toán demo — sẽ thay bằng LLM */

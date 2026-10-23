@@ -52,11 +52,6 @@ body {
 .brand-mark { width: 44px; height: 44px; filter: drop-shadow(0 0 10px rgba(62,230,196,.5)); }
 .brand h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -.01em; }
 .brand p { font-size: .82rem; color: var(--muted); }
-.demo-badge {
-  font-size: .68rem; font-weight: 700; letter-spacing: .14em;
-  color: var(--amber); border: 1px solid rgba(245,185,66,.5);
-  padding: 5px 12px; border-radius: 999px; background: rgba(245,185,66,.08);
-}
 
 main { max-width: 860px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px) 40px; display: grid; gap: 20px; }
 main > * { min-width: 0; } /* cho phép card co nhỏ hơn nội dung (bảng 480px) trên mobile */
