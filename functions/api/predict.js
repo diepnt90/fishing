@@ -123,9 +123,10 @@ function fmtHistory(h, lang = "vi") {
   if (!h) return lang === "en" ? "(none)" : "(không có)";
   const en = lang === "en";
   const wmoName = (c) => T[lang].wmo[c] ?? "?";
+  const dirName = (d) => d == null ? "?" : T[lang].compass[Math.round(d / 45) % 8];
   const hh = (h.hours || []).map((x) =>
-    en ? `${x.time}: ${x.temp}°C, ${x.pressure} hPa, wind ${x.wind} km/h, cloud ${x.cloud}%, rain ${x.precip} mm`
-       : `${x.time}: ${x.temp}°C, ${x.pressure} hPa, gió ${x.wind} km/h, mây ${x.cloud}%, mưa ${x.precip} mm`).join(" | ");
+    en ? `${x.time}: ${x.temp}°C, ${x.pressure} hPa, wind ${x.wind} km/h (${dirName(x.windDir)}), cloud ${x.cloud}%, rain ${x.precip} mm`
+       : `${x.time}: ${x.temp}°C, ${x.pressure} hPa, gió ${x.wind} km/h (${dirName(x.windDir)}), mây ${x.cloud}%, mưa ${x.precip} mm`).join(" | ");
   const dd = (h.days || []).map((x) =>
     en ? `${x.label}: high ${x.tmax}°C/low ${x.tmin}°C, rain ${x.precip} mm, ${wmoName(x.wmoCode)}`
        : `${x.label}: cao ${x.tmax}°C/thấp ${x.tmin}°C, mưa ${x.precip} mm, ${wmoName(x.wmoCode)}`).join(" | ");

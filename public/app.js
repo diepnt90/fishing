@@ -234,7 +234,7 @@ async function predict() {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}` +
       `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,precipitation,is_day` +
-      `&hourly=temperature_2m,pressure_msl,cloud_cover,wind_speed_10m,precipitation` +
+      `&hourly=temperature_2m,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation` +
       `&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code` +
       `&timezone=auto&forecast_days=1&past_days=5`
     );
@@ -394,6 +394,7 @@ function historyData(wx) {
       temp: Math.round(wx.hourly.temperature_2m[i]),
       pressure: Math.round(wx.hourly.pressure_msl[i]),
       wind: Math.round(wx.hourly.wind_speed_10m[i]),
+      windDir: wx.hourly.wind_direction_10m ? Math.round(wx.hourly.wind_direction_10m[i]) : null,
       cloud: wx.hourly.cloud_cover[i],
       precip: +wx.hourly.precipitation[i].toFixed(1),
     });
