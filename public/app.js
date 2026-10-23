@@ -527,16 +527,17 @@ function startScanScore() {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
     num.textContent = "–"; arc.style.strokeDashoffset = len; return;
   }
-  let val = 0, target = 10 + Math.random() * 80, lastSwitch = 0;
+  // đếm mượt ease-out: nhanh lúc đầu, chậm dần, tiệm cận ~98 khi hết ~55s chờ
+  const t0 = performance.now(), DUR = 55000, TARGET = 98;
   function frame(t) {
-    if (t - lastSwitch > 280) { target = 5 + Math.random() * 90; lastSwitch = t; }
-    val += (target - val) * 0.35;
-    const v = Math.round(val);
+    const el = Math.min(1, (t - t0) / DUR);
+    const eased = 1 - Math.pow(1 - el, 3); // ease-out cubic: nhanh -> chậm
+    const v = Math.round(eased * TARGET);
     num.textContent = v;
     arc.style.strokeDashoffset = len * (1 - v / 100);
-    const pulse = Math.abs(Math.sin(t / 380));   // 0..1: sáng lên xuống
-    arc.style.opacity = (0.45 + 0.55 * pulse).toFixed(2);
-    arc.style.filter = "drop-shadow(0 0 " + Math.round(3 + 9 * pulse) + "px rgba(62,230,196,.75))";
+    const pulse = Math.abs(Math.sin(t / 600)); // sáng nhẹ lên xuống trong lúc chờ
+    arc.style.opacity = (0.55 + 0.45 * pulse).toFixed(2);
+    arc.style.filter = "drop-shadow(0 0 " + Math.round(4 + 8 * pulse) + "px rgba(62,230,196,.75))";
     state.scanId = requestAnimationFrame(frame);
   }
   state.scanId = requestAnimationFrame(frame);

@@ -43,7 +43,7 @@ function cacheGrid(lat, lon, gps) {
 function jobIdFor(lat, lon, gps, lang = "vi") {
   const grid = cacheGrid(lat, lon, gps);
   if (!CACHE_ENABLED) return `${grid}|${lang}|${Date.now()}|${Math.random().toString(36).slice(2, 8)}`;
-  return `${grid}|${lang}|${Math.floor(Date.now() / 3600000)}`; // dedup ~1 giờ
+  return `${grid}|${lang}`; // dedup ~1h nhờ max-age=3600 của cache (không kèm giờ để tránh miss khi qua mốc giờ)
 }
 const jobKey = (jid) => new Request(`https://cache.local/api/job?k=${encodeURIComponent(jid)}`);
 const jsonCache = (obj, maxAge = 3600) =>
