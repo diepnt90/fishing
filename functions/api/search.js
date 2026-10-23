@@ -16,7 +16,7 @@ export async function onRequestGet({ request, env }) {
   try {
     if (refId) {
       const r = await fetch(
-        `https://maps.vietmap.vn/api/place/v4?apikey=${key}&ref_id=${encodeURIComponent(refId)}`,
+        `https://maps.vietmap.vn/api/place/v4?apikey=${key}&refid=${encodeURIComponent(refId)}`,
         { signal: AbortSignal.timeout(8000) });
       if (!r.ok) return Response.json({ error: "place_failed" }, { status: 502 });
       const j = await r.json();
