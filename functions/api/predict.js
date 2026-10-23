@@ -1,10 +1,10 @@
 /**
- * POST /api/predict — tạo job dự đoán, trả về ngay { jobId, status: "pending" }.
- * GET  /api/predict?job=<id> — poll kết quả: { status: "pending" } hoặc { status: "done", ... }.
+ * POST /api/predict — gọi AI đồng bộ, trả kết quả luôn (tối đa ~55s).
  *
- * Kiểu job bất đồng bộ: POST nhanh nên khó bị treo/hủy giữa chừng;
- * client poll bằng các GET nhẹ — hụt thì poll lại thoải mái.
- * Việc nặng (gọi LLM) chạy nền qua waitUntil.
+ * Thiết kế đồng bộ có chủ ý: kiểu job bất đồng bộ trước đây (waitUntil + poll +
+ * caches.default) hay treo vì (1) caches.default không đồng bộ giữa các colo
+ * Cloudflare → poll mãi không thấy, (2) task nền waitUntil có thể bị giết.
+ * Đồng bộ thì đơn giản, khó hỏng. Cache 1h vẫn giữ để dedup (miss thì tính lại).
  *
  * Secrets (Cloudflare, loại Secret, không commit):
  *   LLM_API_KEY — key OpenAI
@@ -249,7 +249,7 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.LLM_API_KEY}`, "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(120000), // chờ AI thoải mái (reasoning medium)
+    signal: AbortSignal.timeout(45000),
     body: JSON.stringify({
       model: LLM_MODEL,
       reasoning_effort: "medium",
@@ -344,30 +344,27 @@ function crossCheckText(omW, extra, lang = "vi") {
   return lines.join("\n");
 }
 
-/* chạy nền: gọi LLM rồi cất kết quả vào cache để poll đọc */
-async function runJob(env, origin, jid, input) {
-  let result;
+/* chạy ĐỒNG BỘ trong request: gọi LLM rồi trả kết quả (fallback khi lỗi) */
+async function runSync(env, origin, input) {
   try {
     if (!env.LLM_API_KEY) throw new Error("LLM HTTP no_key");
     const lang = input.lang === "en" ? "en" : "vi";
     const extra = await fetchExtraSources(env, input.lat, input.lon, lang);
     const checkText = crossCheckText(input.weather, extra, lang);
-    result = await llmPredict(env, origin, { ...input, crossCheck: checkText, lang });
+    const result = await llmPredict(env, origin, { ...input, crossCheck: checkText, lang });
     result.sources = checkText;
+    return result;
   } catch (e) {
     const m = /LLM HTTP ([\w_]+)/.exec(e.message || "");
     const fb = demoPredict(input.weather, input.moon, input.lang === "en" ? "en" : "vi");
-    // chi tiết lỗi để debug lúc testing (lọc key nếu có lọt vào)
+    // chi tiết lỗi để debug (lọc key nếu có lọt vào)
     const raw = String((e && e.name ? e.name + ": " : "") + ((e && e.message) || e)).slice(0, 140);
     const safe = raw.replace(/sk-[A-Za-z0-9-_]+/g, "[key]").replace(/Bearer\s+[^\s]+/gi, "Bearer [key]");
-    result = { ...fb, llmError: m ? `http_${m[1]}` : `llm_error:${safe}` };
+    return { ...fb, llmError: m ? `http_${m[1]}` : `llm_error:${safe}` };
   }
-  try {
-    await caches.default.put(jobKey(jid), jsonCache({ ...result, status: "done", jobId: jid }));
-  } catch { /* bỏ qua */ }
 }
 
-export async function onRequestPost({ request, env, waitUntil }) {
+export async function onRequestPost({ request, env }) {
   let body = {};
   try { body = await request.json(); } catch { /* bỏ qua */ }
   const { weather = {}, moon = {}, history = null } = body;
@@ -375,7 +372,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
   const lang = body.lang === "en" ? "en" : "vi";
   const jid = jobIdFor(lat, lon, gps, lang);
 
-  // job đã xong trước đó (dedup) → trả ngay
+  // dedup: đã tính trong 1h qua → trả ngay (cache miss do khác colo thì tính lại, không treo)
   try {
     const hit = await caches.default.match(jobKey(jid));
     if (hit) {
@@ -384,24 +381,10 @@ export async function onRequestPost({ request, env, waitUntil }) {
     }
   } catch { /* bỏ qua */ }
 
-  // chạy nền, trả jobId ngay để client poll
+  // gọi AI đồng bộ trong request (nguồn phụ ≤8s + LLM ≤45s), xong trả luôn
+  const result = await runSync(env, new URL(request.url).origin, { weather, moon, history, lat, lon, lang });
   try {
-    waitUntil(runJob(env, new URL(request.url).origin, jid, { weather, moon, history, lat, lon, lang }));
-  } catch {
-    /* môi trường không hỗ trợ waitUntil → chạy đồng bộ */
-    await runJob(env, new URL(request.url).origin, jid, { weather, moon, history, lat, lon, lang });
-    const hit = await caches.default.match(jobKey(jid)).catch(() => null);
-    if (hit) return Response.json(await hit.json());
-  }
-  return Response.json({ jobId: jid, status: "pending", demo: false });
-}
-
-export async function onRequestGet({ request }) {
-  const jid = new URL(request.url).searchParams.get("job");
-  if (!jid) return Response.json({ status: "error", message: "missing job" }, { status: 400 });
-  try {
-    const hit = await caches.default.match(jobKey(jid));
-    if (hit) return Response.json(await hit.json());
+    await caches.default.put(jobKey(jid), jsonCache({ ...result, status: "done", jobId: jid }));
   } catch { /* bỏ qua */ }
-  return Response.json({ status: "pending" });
+  return Response.json({ ...result, status: "done", jobId: jid });
 }

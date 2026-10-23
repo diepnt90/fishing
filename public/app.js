@@ -258,39 +258,28 @@ async function predict() {
   const c = wx.current, moon = moonInfo();
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
 
-  // gọi API dự đoán kiểu job: POST tạo job (trả về ngay) rồi poll GET mỗi 2s.
-  // Mỗi poll là request nhẹ độc lập — hụt thì poll lại, không treo như chờ 1 request dài.
+  // gọi API dự đoán ĐỒNG BỘ: POST một phát, server gọi AI xong trả luôn (tối đa ~55s).
+  // Thử lại 1 lần nếu kẹt mạng. Không poll — đơn giản, khó treo.
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-  async function predictViaJob(payload) {
-    let job = null;
-    for (let a = 0; a < 2 && !job; a++) { // POST nhanh, thử lại 1 lần nếu kẹt
+  async function predictSync(payload) {
+    for (let a = 0; a < 2; a++) {
       try {
         const r = await fetch("/api/predict", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(10000), body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(60000), body: JSON.stringify(payload),
         });
-        if (r.ok) job = await r.json();
+        if (r.ok) {
+          const j = await r.json();
+          if (j.status === "done" || j.score != null) return j;
+        }
       } catch { /* thử lại */ }
-      if (!job && a === 0) await sleep(1500);
-    }
-    if (!job) return null;
-    if (job.status === "done") return job; // trúng job đã xong (dedup)
-    for (let i = 0; i < 90; i++) { // poll tối đa ~180s (chờ AI reasoning medium thoải mái)
-      await sleep(2000);
-      try {
-        const pr = await fetch(`/api/predict?job=${encodeURIComponent(job.jobId)}`,
-          { signal: AbortSignal.timeout(10000) });
-        if (!pr.ok) continue;
-        const pj = await pr.json();
-        if (pj.status === "done") return pj;
-        if (pj.status === "error") return null;
-      } catch { /* poll hụt → poll tiếp */ }
+      if (a === 0) await sleep(1500);
     }
     return null;
   }
   let api = null;
   try {
-    api = await predictViaJob({ lat: state.lat, lon: state.lon, gps: state.gps, lang: LANG, weather: c,
+    api = await predictSync({ lat: state.lat, lon: state.lon, gps: state.gps, lang: LANG, weather: c,
       moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) });
   } catch { /* fallback demo */ }
 
