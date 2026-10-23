@@ -364,7 +364,7 @@ function demoScore(c, wx, moon, nowH) {
 
 function renderResult(data, c, moon) {
   animateScore(data.score);
-  setVerdict(data.title, data.sub + (data.cached ? t("cachedNote") : ""), data.score);
+  setVerdict(data.title, data.sub, data.score);
   const box = $("#chips"); box.innerHTML = "";
   (data.chips || []).forEach((ch) => {
     const d = document.createElement("div");
