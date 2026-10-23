@@ -24,3 +24,4 @@ Web này phục vụ câu các loài cá tầng đáy ở ao/hồ/sông Việt N
 - **Quy luật:** Cá (kể cả cá đáy như chép, diếc) chỉ đi ăn lửng/mặt vào những hôm thiếu oxy — trời oi nóng, lặng gió. Bình thường cá đáy vẫn ăn đáy. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
 - **Quy luật:** Sau cơn mưa kéo dài 2–5 tiếng, trời hửng nắng trở lại mà không có gió hoặc gió rất yếu → cá không đi ăn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
 - **Quy luật:** Chênh lệch nhiệt độ ngày–đêm càng lớn thì cá ăn càng chậm; chênh trên 8 độ thì cá gần như không ăn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
+- **Quy luật:** Vào thời điểm giao mùa (chuyển mùa) cá ăn chậm hẳn. | **Nguồn:** Điệp (kinh nghiệm thực tế đi câu) | **Độ tin cậy:** cao
