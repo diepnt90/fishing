@@ -232,6 +232,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     '  ], // cls là good | warn | bad | ""',
     '  "depth": 0 (cá ăn mặt) | 1 (ăn lửng) | 2 (ăn đáy)',
     "}",
+    "Hướng gió trong chips (cả v và d): viết tên tiếng Việt đầy đủ (Bắc, Đông Bắc, Đông, Đông Nam, Nam, Tây Nam, Tây, Tây Bắc) — CẤM viết tắt kiểu tiếng Anh (N, NE, E, SE, S, SW, W, NW).",
     "Lưu ý: cá tầng đáy bình thường luôn ăn ở đáy; chỉ cho ăn lửng/mặt khi có dấu hiệu thiếu oxy (trời oi nóng, lặng gió) — và khi đó điểm phải THẤP (≤40) vì cá đang stress chứ không phải đang ăn mạnh.",
   ];
   return body.join("\n");
