@@ -122,17 +122,27 @@ async function predict() {
   const c = wx.current, moon = moonInfo();
   const nowH = new Date().getHours() + new Date().getMinutes() / 60;
 
-  // thử gọi API dự đoán (Cloudflare Function); lỗi thì dùng thuật toán demo tại chỗ
+  // thử gọi API dự đoán (Cloudflare Function); lỗi/kẹt thì thử lại 1 lần, vẫn lỗi → demo tại chỗ
+  async function postPredict(payload) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 15000);
+      try {
+        const r = await fetch("/api/predict", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          signal: ctl.signal, body: JSON.stringify(payload),
+        });
+        clearTimeout(t);
+        if (r.ok) return await r.json();
+      } catch { clearTimeout(t); }
+      if (attempt === 0) await new Promise((res) => setTimeout(res, 1500));
+    }
+    return null;
+  }
   let api = null;
   try {
-    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 15000);
-    const r = await fetch("/api/predict", {
-      method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
-      body: JSON.stringify({ lat: state.lat, lon: state.lon, gps: state.gps, weather: c,
-        moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) })
-    });
-    clearTimeout(t);
-    if (r.ok) api = await r.json();
+    api = await postPredict({ lat: state.lat, lon: state.lon, gps: state.gps, weather: c,
+      moon: { illum: moon.illum, phase: moon.phaseName }, history: historyData(wx) });
   } catch { /* fallback demo */ }
 
   const data = api || demoScore(c, wx, moon, nowH);

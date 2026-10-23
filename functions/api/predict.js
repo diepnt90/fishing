@@ -95,6 +95,7 @@ async function llmPredict(env, request, { weather, moon, history, lat, lon }) {
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.LLM_API_KEY}`, "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(25000),
     body: JSON.stringify({
       model: LLM_MODEL,
       response_format: { type: "json_object" },
