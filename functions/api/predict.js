@@ -226,7 +226,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     '  "penalties": [{"d": "rain 2–5h then sun+calm", "pts": -20}], // may be empty',
     '  "chips": [',
     '    {"k": "Moon", "v": "91%", "d": "solunar times...", "cls": "good"},',
-    '  ], // chips ONLY for info OUTSIDE the 6 factors (moon, rain, solunar...). NEVER repeat the 6 factors; cls is good | warn | bad | "",',
+    '  ], // chips ONLY for info OUTSIDE the 6 factors (moon, rain, solunar...). NEVER repeat the 6 factors; NEVER include weather-source cross-check info (sources agreeing/disagreeing); cls is good | warn | bad | "",',
     '  "depth": 0 (surface feeding) | 1 (mid-water) | 2 (bottom)',
     "}",
     "Note: bottom feeders normally feed at the bottom; only choose mid-water/surface when there are signs of low oxygen (hot, muggy, still air) or other special conditions — and in that case keep the score LOW (≤40) because the fish are stressed, not feeding well.",
@@ -313,7 +313,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     '  "penalties": [{"d": "mưa 2–5h rồi nắng+lặng gió", "pts": -20}], // có thể rỗng',
     '  "chips": [',
     '    {"k": "Mặt trăng", "v": "91%", "d": "giờ solunar...", "cls": "good"},',
-    '  ], // chips CHỈ cho thông tin NGOÀI 6 yếu tố (mặt trăng, mưa, solunar...). CẤM lặp lại 6 yếu tố đã có trong factors; cls là good | warn | bad | "",',
+    '  ], // chips CHỈ cho thông tin NGOÀI 6 yếu tố (mặt trăng, mưa, solunar...). CẤM lặp lại 6 yếu tố đã có trong factors; CẤM đưa thông tin đối chứng nguồn thời tiết (các nguồn đồng thuận/mâu thuẫn) vào chips; cls là good | warn | bad | "",',
     '  "depth": 0 (cá ăn mặt) | 1 (ăn lửng) | 2 (ăn đáy)',
     "}",
     "Hướng gió trong chips (cả v và d): viết tên tiếng Việt đầy đủ (Bắc, Đông Bắc, Đông, Đông Nam, Nam, Tây Nam, Tây, Tây Bắc) — CẤM viết tắt kiểu tiếng Anh (N, NE, E, SE, S, SW, W, NW).",
@@ -355,7 +355,7 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
     : (lang === "en" ? "STAY HOME" : "Ở NHÀ ĐI");
   const okCls = (c) => ["good", "warn", "bad", ""].includes(c) ? c : "";
   const factorKeys = (Array.isArray(v.factors) ? v.factors : []).map((f) => String(f.k || "").toLowerCase());
-  const dupKw = ["gió", "wind", "nhiệt", "temp", "ẩm", "humid", "áp suất", "pressure"];
+  const dupKw = ["gió", "wind", "nhiệt", "temp", "ẩm", "humid", "áp suất", "pressure", "nguồn", "source", "đối chứng", "đồng thuận", "cross", "agree"];
   const chips = Array.isArray(v.chips) ? v.chips.slice(0, 8).map((c) => ({
     k: String(c.k ?? ""), v: String(c.v ?? ""), d: String(c.d ?? ""), cls: okCls(c.cls),
   })).filter((c) => {
