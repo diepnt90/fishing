@@ -187,7 +187,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "### Step 3: Minus time + sub-indicators (only what the 6 factors missed — avoid double counting)",
     "MANDATORY: check EACH item below from the data, do not skip any. If a condition is met, you MUST apply it — do not skip at your discretion.",
     "- Local hour: 5–10h & 14–19h: 0 | 10–14h: hot day (>30°C): −10/−25/−10, cool day (<28°C): half | Night: 19–21h: −10, 21h–0h: −20, 0h–4h: −30, 4h–5h: easing. Harsh sun extra.",
-    "- Day–night diff: CALCULATE from data (today's high minus low, or today vs yesterday if available). If >8°C → MANDATORY −25. If <8°C for 3+ days → +10.",
+    "- Day–night diff: CALCULATE from data (today's high minus low) and WRITE the number into the dayNightDiff field (eg: 9.5). If >8°C → MANDATORY −25. If <8°C for 3+ days → +10.",
     "- Season change: −15 | Stable many days: +10",
     "- Day after cold front: −50 | Day before cold front: +15 | Hot yesterday→cool+wind today: +15 | →overcast+strong wind: −20",
     "- Light rain then light sun: +15 | 2 cloudy cool days: +10 | Rain all yesterday→clear today: −30 | Rain 2–5h then sun+calm: −20",
@@ -203,6 +203,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "Predict RIGHT NOW whether fish are biting. Return pure JSON only (no markdown, no extra explanation):",
     "{",
     '  "score": final number 0-100 from Steps 1-5 ONLY,',
+    '  "dayNightDiff": 9.5, // day-night temp difference calculated from data (°C), required',
     '  "title": "short band title (system normalizes it — just put a placeholder)",',
     '  "sub": "1-2 short sentences of explanation, max 2",',
     '  "factors": [',
@@ -260,7 +261,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "### Bước 3: Trừ phạt giờ + chỉ số phụ (chỉ trừ cái 6 yếu tố chưa bắt được — tránh tính trùng)",
     "BẮT BUỘC kiểm tra TỪNG mục dưới đây từ số liệu, không được bỏ qua mục nào. Nếu điều kiện thỏa mãn thì BẮT BUỘC áp dụng, không được tùy ý bỏ qua.",
     "- Giờ địa phương: 5–10h & 14–19h: 0 | 10–14h: ngày nóng (>30°C): −10/−25/−10, ngày mát (<28°C): một nửa | Đêm: 19–21h: −10, 21h–0h: −20, 0h–4h: −30, 4h–5h: nới dần. Nắng gắt trừ thêm.",
-    "- Chênh ngày–đêm: TÍNH từ dữ liệu (nhiệt cao nhất trừ thấp nhất trong ngày hôm nay, hoặc hôm nay so với hôm qua nếu có). Nếu >8°C → BẮT BUỘC −25. Nếu <8°C duy trì 3+ ngày → +10.",
+    "- Chênh ngày–đêm: TÍNH từ dữ liệu (nhiệt cao nhất trừ thấp nhất trong ngày hôm nay) và GHI RÕ con số vào trường dayNightDiff (vd: 9.5). Nếu >8°C → BẮT BUỘC −25. Nếu <8°C duy trì 3+ ngày → +10.",
     "- Giao mùa: −15 | Ổn định nhiều ngày: +10",
     "- Hôm sau lạnh về: −50 | Ngày trước lạnh về: +15 | Nóng hôm qua→mát+gió hôm nay: +15 | →âm u+gió to: −20",
     "- Mưa nhẹ rồi nắng nhẹ: +15 | 2 ngày mây mát: +10 | Mưa cả ngày hôm qua→tạnh hôm nay: −30 | Mưa 2–5h rồi nắng+lặng gió: −20",
@@ -276,6 +277,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "Dự đoán NGAY LÚC NÀY cá có đi ăn không. Chỉ trả về JSON thuần (không markdown, không giải thích thêm):",
     "{",
     '  "score": số 0-100 cuối cùng, CHỈ từ Bước 1–5,',
+    '  "dayNightDiff": 9.5, // chênh nhiệt ngày-đêm tính từ dữ liệu (°C), bắt buộc phải có',
     '  "title": "tiêu đề ngắn theo band điểm (hệ thống tự chuẩn hoá — cứ để tạm)",',
     '  "sub": "1-2 câu giải thích ngắn gọn, tối đa 2 câu",',
     '  "factors": [',
@@ -346,8 +348,9 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
     d: String(x.d ?? ""), pts: Math.max(-100, Math.min(100, Math.round(+x.pts || 0))),
   })) : [];
   const depth = [0, 1, 2].includes(v.depth) ? v.depth : 1;
+  const dayNightDiff = Number.isFinite(+v.dayNightDiff) ? Math.round(+v.dayNightDiff * 10) / 10 : null;
 
-  return { score, title, sub: String(v.sub || ""), chips, factors, penalties, depth, demo: false };
+  return { score, title, sub: String(v.sub || ""), chips, factors, penalties, depth, demo: false, dayNightDiff };
 }
 
 /* ---------- đối chứng 3 nguồn thời tiết ---------- */
