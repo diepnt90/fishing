@@ -6,9 +6,13 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 
 ## Áp suất
 - Mùa hè áp suất thường dao động quanh 1000-1010 hPa, mùa đông 1015-1030 hPa. So với mức bình thường của mùa, không so tuyệt đối.
-- Áp suất cao thấp không quan trọng bằng tốc độ thay đổi.
-- Giảm chậm 1-2 hPa trong 5 giờ: ăn mạnh.
-- Tăng hoặc giảm nhanh trong 5 giờ: bỏ ăn.
+- Áp suất cao thấp không quan trọng bằng tốc độ thay đổi. Bảng thay đổi áp suất / 5 giờ:
+- Ổn định (dưới ±1,5 hPa): bình thường.
+- Giảm chậm 1,5-5 hPa: ăn mạnh nhất.
+- Giảm nhanh 5-10 hPa: ăn kém dần, cá chọn lọc.
+- Giảm rất nhanh (trên 10 hPa): gần như không ăn.
+- Tăng chậm 1,5-3 hPa: ăn khá.
+- Tăng nhanh (trên 5 hPa): ăn yếu.
 - Sau biến động mạnh cần 1-2 ngày để ăn mạnh lại.
 
 ## Xu hướng nhiệt độ nước (5 ngày)
