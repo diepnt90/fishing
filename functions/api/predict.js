@@ -71,13 +71,21 @@ function demoPredict(weather, moon, lang = "vi") {
   score += Math.round(14 * (1 - prox * 2));
   score = Math.max(5, Math.min(97, score));
 
-  const title = score >= 75 ? (en ? "GO FISHING!" : "ĐI CÂU NGAY!")
+  const title = score >= 90 ? (en ? "FISH QUEUEING UP" : "CÁ XẾP HÀNG ĐỚP")
+    : score >= 75 ? (en ? "GO FISHING!" : "ĐI CÂU NGAY!")
+    : score >= 65 ? (en ? "TASTY!" : "NGON RỒI ĐẤY")
     : score >= 55 ? (en ? "PRETTY GOOD" : "KHÁ ĐẤY")
-    : score >= 30 ? (en ? "HIT OR MISS" : "HÊN XUI") : (en ? "STAY HOME" : "Ở NHÀ ĐI");
-  const sub = score >= 75 ? (en ? "Fish are biting hard — grab your rod!" : "Cá đang ăn mạnh — xách cần lên đường!")
+    : score >= 45 ? (en ? "HOPEFUL" : "CÓ HY VỌNG")
+    : score >= 30 ? (en ? "HIT OR MISS" : "HÊN XUI")
+    : score >= 10 ? (en ? "STAY HOME" : "Ở NHÀ ĐI") : (en ? "FISH ON STRIKE" : "CÁ TUYỆT THỰC");
+  const sub = score >= 90 ? (en ? "Skip today and waste a whole week, fish are already waiting!" : "Không đi hôm nay là phí cả tuần, cá chờ sẵn rồi!")
+    : score >= 75 ? (en ? "Fish are biting hard — grab your rod!" : "Cá đang ăn mạnh — xách cần lên đường!")
+    : score >= 65 ? (en ? "Fish biting steadily, bring extra bait." : "Cá ăn khá đều, mang thêm mồi đi.")
     : score >= 55 ? (en ? "Good chance, time it with the golden hour." : "Có cơ hội tốt, canh đúng giờ vàng mà quất.")
+    : score >= 45 ? (en ? "Fish are stirring, patience pays." : "Cá bắt đầu nhúc nhích, kiên nhẫn là có quà.")
     : score >= 30 ? (en ? "Fish are lazy; go for fun." : "Cá lười ăn, đi cho vui là chính.")
-    : (en ? "Fish aren't biting today — save your bait." : "Hôm nay cá không thèm ăn — ở nhà đỡ phí mồi.");
+    : score >= 10 ? (en ? "Fish snub your bait, save it for another day." : "Cá chê mồi, ở nhà đỡ phí mồi.")
+    : (en ? "Fish are fasting in protest, stay home and nap." : "Cá nhịn ăn tập thể, ở nhà ngủ cho lành.");
   const fromApi = en ? "From weather API" : "Từ API thời tiết";
 
   return {
@@ -349,10 +357,14 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
   const score = Math.max(0, Math.min(100, Math.round(+v.score)));
   if (!Number.isFinite(score)) throw new Error("LLM score invalid");
   // tiêu đề suy từ band điểm — không dùng title của AI (đã từng chép nguyên hướng dẫn vào title)
-  const title = score >= 75 ? (lang === "en" ? "GO FISHING!" : "ĐI CÂU NGAY!")
+  const title = score >= 90 ? (lang === "en" ? "FISH QUEUEING UP" : "CÁ XẾP HÀNG ĐỚP")
+    : score >= 75 ? (lang === "en" ? "GO FISHING!" : "ĐI CÂU NGAY!")
+    : score >= 65 ? (lang === "en" ? "TASTY!" : "NGON RỒI ĐẤY")
     : score >= 55 ? (lang === "en" ? "PRETTY GOOD" : "KHÁ ĐẤY")
+    : score >= 45 ? (lang === "en" ? "HOPEFUL" : "CÓ HY VỌNG")
     : score >= 30 ? (lang === "en" ? "HIT OR MISS" : "HÊN XUI")
-    : (lang === "en" ? "STAY HOME" : "Ở NHÀ ĐI");
+    : score >= 10 ? (lang === "en" ? "STAY HOME" : "Ở NHÀ ĐI")
+    : (lang === "en" ? "FISH ON STRIKE" : "CÁ TUYỆT THỰC");
   const okCls = (c) => ["good", "warn", "bad", ""].includes(c) ? c : "";
   const factorKeys = (Array.isArray(v.factors) ? v.factors : []).map((f) => String(f.k || "").toLowerCase());
   const dupKw = ["gió", "wind", "nhiệt", "temp", "ẩm", "humid", "áp suất", "pressure", "nguồn", "source", "đối chứng", "đồng thuận", "cross", "agree"];

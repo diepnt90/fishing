@@ -17,7 +17,7 @@ vi: {
   gpsHint: "Dùng GPS của thiết bị để lấy tọa độ hiện tại của bạn.", gpsBtn: "Lấy vị trí hiện tại",
   changePlace: "đổi", step2: "Dự đoán ngay lúc này", verdictLoading: "Đang xem thời tiết…",
   verdictMore: "Xem thêm ▾", verdictLess: "Thu gọn ▴",
-  legend1: "0–29 Ở nhà", legend2: "30–54 Hên xui", legend3: "55–74 Khá đấy", legend4: "75–100 Đi ngay",
+  legend1: "0–9 Tuyệt thực", legend2: "10–29 Ở nhà", legend3: "30–44 Hên xui", legend4: "45–54 Có hy vọng", legend5: "55–64 Khá đấy", legend6: "65–74 Ngon rồi", legend7: "75–89 Đi ngay", legend8: "90–100 Xếp hàng đớp",
   step3: "Vì sao lại thế?",
   aiNoteLive: "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế.",
   aiNoteFallback: "AI chưa phản hồi — đang dùng thuật toán dự phòng.",
@@ -36,10 +36,14 @@ vi: {
   thDate: "Ngày", thHiLo: "Cao/Thấp", thWeather: "Thời tiết",
   compass: ["Bắc","Đông Bắc","Đông","Đông Nam","Nam","Tây Nam","Tây","Tây Bắc"],
   moonNames: ["Trăng non","Lưỡi liềm đầu tháng","Bán nguyệt đầu tháng","Khuyết đầu tháng","Trăng tròn","Khuyết cuối tháng","Bán nguyệt cuối tháng","Lưỡi liềm cuối tháng"],
-  dGo: "ĐI CÂU NGAY!", dGoS: "Cá đang ăn mạnh — xách cần lên đường!",
-  dOk: "KHÁ ĐẤY", dOkS: "Có cơ hội tốt, canh đúng giờ vàng mà quất.",
+  dStrike: "CÁ TUYỆT THỰC", dStrikeS: "Cá nhịn ăn tập thể, ở nhà ngủ cho lành.",
+  dHome: "Ở NHÀ ĐI", dHomeS: "Cá chê mồi, ở nhà đỡ phí mồi.",
   dMeh: "HÊN XUI", dMehS: "Cá lười ăn, đi cho vui là chính, đừng kỳ vọng.",
-  dHome: "Ở NHÀ ĐI", dHomeS: "Hôm nay cá không thèm ăn — ở nhà đỡ phí mồi.",
+  dHope: "CÓ HY VỌNG", dHopeS: "Cá bắt đầu nhúc nhích, kiên nhẫn là có quà.",
+  dOk: "KHÁ ĐẤY", dOkS: "Có cơ hội tốt, canh đúng giờ vàng mà quất.",
+  dTasty: "NGON RỒI ĐẤY", dTastyS: "Cá ăn khá đều, mang thêm mồi đi.",
+  dGo: "ĐI CÂU NGAY!", dGoS: "Cá đang ăn mạnh — xách cần lên đường!",
+  dQueue: "CÁ XẾP HÀNG ĐỚP", dQueueS: "Không đi hôm nay là phí cả tuần, cá chờ sẵn rồi!",
   dMoon: "Mặt trăng", dMoonD: (m) => `Giờ vàng solunar: ${m}`,
   dPressure: "Áp suất", dPDown: "Đang giảm — cá thường ăn mạnh", dPUp: "Đang tăng nhanh", dPStable: "Ổn định",
   dWind: "Gió", dWCalm: "Nhẹ, lý tưởng", dWMod: "Vừa phải", dWStrong: "Mạnh, khó câu",
@@ -59,7 +63,7 @@ en: {
   gpsHint: "Use your device GPS to get your current coordinates.", gpsBtn: "Get current location",
   changePlace: "change", step2: "Right-now forecast", verdictLoading: "Checking the weather…",
   verdictMore: "Show more ▾", verdictLess: "Show less ▴",
-  legend1: "0–29 Stay home", legend2: "30–54 Hit or miss", legend3: "55–74 Pretty good", legend4: "75–100 Go now",
+  legend1: "0–9 On strike", legend2: "10–29 Stay home", legend3: "30–44 Hit or miss", legend4: "45–54 Hopeful", legend5: "55–64 Pretty good", legend6: "65–74 Tasty", legend7: "75–89 Go now", legend8: "90–100 Queueing up",
   step3: "Why?",
   aiNoteLive: "Analyzed by AI from live weather data.",
   aiNoteFallback: "AI didn't respond — using the fallback algorithm.",
@@ -78,10 +82,14 @@ en: {
   thDate: "Date", thHiLo: "High/Low", thWeather: "Weather",
   compass: ["N","NE","E","SE","S","SW","W","NW"],
   moonNames: ["New moon","Waxing crescent","First quarter","Waxing gibbous","Full moon","Waning gibbous","Last quarter","Waning crescent"],
-  dGo: "GO FISHING!", dGoS: "Fish are biting hard — grab your rod!",
-  dOk: "PRETTY GOOD", dOkS: "Good chance, time it with the golden hour.",
+  dStrike: "FISH ON STRIKE", dStrikeS: "Fish are fasting in protest, stay home and nap.",
+  dHome: "STAY HOME", dHomeS: "Fish snub your bait, save it for another day.",
   dMeh: "HIT OR MISS", dMehS: "Fish are lazy; go for fun, keep expectations low.",
-  dHome: "STAY HOME", dHomeS: "Fish aren't biting today — save your bait.",
+  dHope: "HOPEFUL", dHopeS: "Fish are stirring, patience pays.",
+  dOk: "PRETTY GOOD", dOkS: "Good chance, time it with the golden hour.",
+  dTasty: "TASTY!", dTastyS: "Fish biting steadily, bring extra bait.",
+  dGo: "GO FISHING!", dGoS: "Fish are biting hard — grab your rod!",
+  dQueue: "FISH QUEUEING UP", dQueueS: "Skip today and waste a whole week, fish are already waiting!",
   dMoon: "Moon", dMoonD: (m) => `Solunar majors: ${m}`,
   dPressure: "Pressure", dPDown: "Falling — fish often feed hard", dPUp: "Rising fast", dPStable: "Steady",
   dWind: "Wind", dWCalm: "Light, ideal", dWMod: "Moderate", dWStrong: "Strong, hard to fish",
@@ -258,7 +266,7 @@ function writeClientCache(key, data) {
 /* ---------- dự đoán ---------- */
 async function predict() {
   const scene = $("#scene-card"), factors = $("#factors-card");
-  scene.classList.remove("hidden"); factors.classList.remove("hidden");
+  scene.classList.remove("hidden"); factors.classList.remove("hidden"); const lg = $("#scale-legend"); if (lg) lg.classList.remove("on");
   scene.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
   // cache client 1h: trúng thì dùng ngay, khỏi gọi AI
@@ -389,14 +397,19 @@ function demoScore(c, wx, moon, nowH) {
   chips.push({ k: t("dSolunar"), v: moon.major.join(" & "), d: nearGolden ? t("dGoldenNow") : t("dGoldenLater"), cls: nearGolden ? "good" : "warn" });
 
   s = Math.min(100, Math.round(s));
-  const verdict = s >= 75 ? [t("dGo"), t("dGoS")]
+  const verdict = s >= 90 ? [t("dQueue"), t("dQueueS")]
+    : s >= 75 ? [t("dGo"), t("dGoS")]
+    : s >= 65 ? [t("dTasty"), t("dTastyS")]
     : s >= 55 ? [t("dOk"), t("dOkS")]
+    : s >= 45 ? [t("dHope"), t("dHopeS")]
     : s >= 30 ? [t("dMeh"), t("dMehS")]
-    : [t("dHome"), t("dHomeS")];
+    : s >= 10 ? [t("dHome"), t("dHomeS")]
+    : [t("dStrike"), t("dStrikeS")];
   return { score: s, title: verdict[0], sub: verdict[1], chips, demo: true };
 }
 
 function renderResult(data, c, moon) {
+  const lg2 = $("#scale-legend"); if (lg2) lg2.classList.add("on");
   $("#verdict").classList.remove("is-loading");
   stopScanScore();
   animateScore(data.score);
@@ -491,8 +504,8 @@ function setVerdict(title, sub, score) {
     if (cut) moreBtn.textContent = t("verdictMore");
   });
   const el = $("#verdict-title");
-  el.style.color = score == null ? "var(--ink)" : score >= 75 ? "var(--glow)" : score >= 55 ? "var(--lime)" : score >= 30 ? "var(--amber)" : "var(--coral)";
-  el.style.textShadow = `0 0 34px ${score == null ? "transparent" : score >= 75 ? "rgba(62,230,196,.55)" : score >= 55 ? "rgba(163,230,53,.45)" : score >= 30 ? "rgba(245,185,66,.45)" : "rgba(255,107,107,.45)"}`;
+  el.style.color = score == null ? "var(--ink)" : score >= 90 ? "#22d3ee" : score >= 75 ? "var(--glow)" : score >= 65 ? "#4ade80" : score >= 55 ? "var(--lime)" : score >= 45 ? "#ffcf3f" : score >= 30 ? "var(--amber)" : score >= 10 ? "var(--coral)" : "#ff5252";
+  el.style.textShadow = `0 0 34px ${score == null ? "transparent" : score >= 90 ? "rgba(34,211,238,.55)" : score >= 75 ? "rgba(62,230,196,.55)" : score >= 65 ? "rgba(74,222,128,.5)" : score >= 55 ? "rgba(163,230,53,.45)" : score >= 45 ? "rgba(255,207,63,.45)" : score >= 30 ? "rgba(245,185,66,.45)" : score >= 10 ? "rgba(255,107,107,.45)" : "rgba(255,82,82,.5)"}`;
 }
 
 /* ---------- lịch sử: 5 giờ gần nhất + 5 ngày qua ---------- */
@@ -618,7 +631,7 @@ function startScanScore() {
 /* ---------- đàn cá canvas ----------
    Điểm cao → đông cá, bơi nhanh, sáng rực. Điểm thấp → lèo tèo vài con, bơi chậm, mờ.
    Tầng ăn (depthAvg 0=mặt → 2=đáy) → đàn cá tụ về đúng tầng đó, di cư mượt mà. */
-function scoreColor(s) { return s >= 75 ? "#3ee6c4" : s >= 55 ? "#a3e635" : s >= 30 ? "#f5b942" : "#ff6b6b"; }
+function scoreColor(s) { return s >= 90 ? "#22d3ee" : s >= 75 ? "#3ee6c4" : s >= 65 ? "#4ade80" : s >= 55 ? "#a3e635" : s >= 45 ? "#ffcf3f" : s >= 30 ? "#f5b942" : s >= 10 ? "#ff6b6b" : "#ff5252"; }
 function stopSea() { if (state.animId) cancelAnimationFrame(state.animId); state.animId = null; }
 
 /* ---------- sonar máy dò cá: chạy trong lúc chờ AI ---------- */
