@@ -17,7 +17,7 @@ vi: {
   gpsHint: "Dùng GPS của thiết bị để lấy tọa độ hiện tại của bạn.", gpsBtn: "Lấy vị trí hiện tại",
   changePlace: "đổi", step2: "Dự đoán ngay lúc này", verdictLoading: "Đang xem thời tiết…",
   verdictMore: "Xem thêm ▾", verdictLess: "Thu gọn ▴",
-  legend1: "0–9 Tuyệt thực", legend2: "10–29 Ở nhà", legend3: "30–44 Hên xui", legend4: "45–54 Có hy vọng", legend5: "55–64 Khá đấy", legend6: "65–74 Ngon rồi", legend7: "75–89 Đi ngay", legend8: "90–100 Xếp hàng đớp",
+
   step3: "Vì sao lại thế?",
   aiNoteLive: "Kết quả do AI phân tích từ dữ liệu thời tiết thực tế.",
   aiNoteFallback: "AI chưa phản hồi — đang dùng thuật toán dự phòng.",
@@ -63,7 +63,7 @@ en: {
   gpsHint: "Use your device GPS to get your current coordinates.", gpsBtn: "Get current location",
   changePlace: "change", step2: "Right-now forecast", verdictLoading: "Checking the weather…",
   verdictMore: "Show more ▾", verdictLess: "Show less ▴",
-  legend1: "0–9 On strike", legend2: "10–29 Stay home", legend3: "30–44 Hit or miss", legend4: "45–54 Hopeful", legend5: "55–64 Pretty good", legend6: "65–74 Tasty", legend7: "75–89 Go now", legend8: "90–100 Queueing up",
+
   step3: "Why?",
   aiNoteLive: "Analyzed by AI from live weather data.",
   aiNoteFallback: "AI didn't respond — using the fallback algorithm.",
@@ -266,7 +266,7 @@ function writeClientCache(key, data) {
 /* ---------- dự đoán ---------- */
 async function predict() {
   const scene = $("#scene-card"), factors = $("#factors-card");
-  scene.classList.remove("hidden"); factors.classList.remove("hidden"); const lg = $("#scale-legend"); if (lg) lg.classList.remove("on");
+  scene.classList.remove("hidden"); factors.classList.remove("hidden");
   scene.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
   // cache client 1h: trúng thì dùng ngay, khỏi gọi AI
@@ -409,7 +409,6 @@ function demoScore(c, wx, moon, nowH) {
 }
 
 function renderResult(data, c, moon) {
-  const lg2 = $("#scale-legend"); if (lg2) lg2.classList.add("on");
   $("#verdict").classList.remove("is-loading");
   stopScanScore();
   animateScore(data.score);

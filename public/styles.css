@@ -180,12 +180,6 @@ main > * { min-width: 0; } /* cho phép card co nhỏ hơn nội dung (bảng 48
 }
 .verdict-more:active { transform: scale(.96); }
 
-.scale-legend { display: none; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: .78rem; color: var(--muted); }
-.scale-legend.on { display: flex; }
-.scale-legend span::before {
-  content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%;
-  background: var(--c); margin-right: 6px; box-shadow: 0 0 8px var(--c);
-}
 
 /* --- factor chips --- */
 .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 10px; }
