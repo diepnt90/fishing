@@ -54,3 +54,4 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Không có mốc điểm cố định. AI tự cân mức cộng/trừ theo ngữ cảnh.
 - Nền càng cao, cú trừ càng đau (nền 70 + yếu tố làm bỏ ăn thì trừ mạnh để điểm cuối xuống thấp, thể hiện cá đã ngừng ăn; cùng yếu tố đó trên nền 50 thì trừ nhẹ).
 - Điểm cuối phải phản ánh đúng thực tế cá có ăn hay không, không phải cộng trừ máy móc.
+- Nội suy bắt buộc, cấm nhảy ngưỡng: mức điều chỉnh thay đổi liên tục theo giá trị kích hoạt; chênh lệch nhỏ ở giá trị kích hoạt chỉ được gây chênh lệch nhỏ ở điểm (tối đa 2–3đ cho mỗi 1 hPa / 1°C / 0.5°C chênh lệch).
