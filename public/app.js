@@ -268,7 +268,7 @@ async function predict() {
     setVerdict(t("vLoadingT"), t("vLoadingS"), null);
     startSonar(); // animation máy dò cá trong lúc chờ AI
     $("#verdict").classList.add("is-loading");
-    startScanScore(); // đếm mượt ease-out lên ~98 trong lúc chờ
+    startScanScore(); // đếm lên 60 rồi random quanh 70 trong lúc chờ
   }
 
   let wx;
@@ -589,12 +589,22 @@ function startScanScore() {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
     num.textContent = "–"; arc.style.strokeDashoffset = len; return;
   }
-  // đếm mượt ease-out: nhanh lúc đầu, chậm dần, tiệm cận ~98 khi hết ~55s chờ
-  const t0 = performance.now(), DUR = 95000, TARGET = 98;
+  // Giai đoạn 1: đếm mượt ease-out lên 60 trong 8s. Giai đoạn 2: random tăng/giảm quanh 70 (kẹp 65–75).
+  const t0 = performance.now(), DUR1 = 8000, TOP1 = 60;
+  let v = 0, lastStep = t0;
   function frame(t) {
-    const el = Math.min(1, (t - t0) / DUR);
-    const eased = 1 - Math.pow(1 - el, 3); // ease-out cubic: nhanh -> chậm
-    const v = Math.round(eased * TARGET);
+    if (t - t0 < DUR1) {
+      // Giai đoạn 1: ease-out lên 60
+      const el = (t - t0) / DUR1;
+      const eased = 1 - Math.pow(1 - el, 3); // ease-out cubic: nhanh -> chậm
+      v = Math.round(eased * TOP1);
+    } else if (t - lastStep >= 500) {
+      // Giai đoạn 2: mỗi 500ms nhích random, trôi dần về 70 kèm nhiễu, kẹp 65–75
+      lastStep = t;
+      v = Math.round(v + (70 - v) * 0.3 + (Math.random() * 6 - 3));
+      if (v < 65) v = 65;
+      if (v > 75) v = 75;
+    }
     num.textContent = v;
     arc.style.strokeDashoffset = len * (1 - v / 100);
     const pulse = Math.abs(Math.sin(t / 600)); // sáng nhẹ lên xuống trong lúc chờ
