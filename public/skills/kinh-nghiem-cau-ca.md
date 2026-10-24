@@ -1,6 +1,6 @@
 # Chỉ số phụ — quy luật định tính (AI tự tính điểm theo ngữ cảnh, KHÔNG có mốc điểm cố định)
 
-LƯU Ý BẮT BUỘC CHO AI: Với mỗi quy luật dưới đây, phải TÍNH giá trị kích hoạt từ dữ liệu trước khi quyết định có áp dụng hay không. Không đoán, không bỏ qua quy luật nào. Vd: quy luật áp suất thì phải tính chênh lệch áp suất 5 giờ (giờ cuối trừ giờ đầu trong lịch sử 5 giờ); quy luật giờ thì phải xem giờ địa phương hiện tại; quy luật mưa thì phải xem mưa + nhiệt độ lúc này. Chỉ áp dụng quy luật sau khi đã tính xong giá trị kích hoạt.
+LƯU Ý BẮT BUỘC CHO AI: Với mỗi quy luật dưới đây, phải TÍNH giá trị kích hoạt từ dữ liệu trước khi quyết định có áp dụng hay không. Không đoán, không bỏ qua quy luật nào. Vd: quy luật áp suất thì phải tính chênh lệch áp suất 5 giờ (giờ cuối trừ giờ đầu trong lịch sử 5 giờ); quy luật giờ thì phải xem giờ địa phương hiện tại; quy luật mưa thì phải xem mưa lúc này + mưa trong lịch sử 5 giờ + nhiệt độ lúc này. Chỉ áp dụng quy luật sau khi đã tính xong giá trị kích hoạt.
 
 Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 
@@ -16,9 +16,10 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Sau biến động mạnh cần 1-2 ngày để ăn mạnh lại.
 
 ## Xu hướng nhiệt độ nước (5 ngày)
-- Tăng nhanh từ lạnh về phía thoải mái (20-25°C): ăn tăng.
-- Giảm nhanh từ nóng về phía thoải mái (25-30°C): ăn mạnh.
-- Tăng/giảm nhanh 2-3 độ trong 5 ngày mà không về phía thoải mái, hoặc dao động lên xuống liên tục: giảm ăn dần, càng thay đổi lớn càng giảm mạnh.
+- Tăng/giảm đột ngột → cá ăn yếu (trừ; càng đột ngột càng trừ nhiều, nội suy liên tục). Đột ngột thì trừ dù chiều thay đổi có về phía thoải mái hay không — sốc lớn lấn át hướng tốt.
+- Tăng/giảm nhẹ → bình thường (không trừ).
+- Tăng/giảm nhẹ từ mức trung bình về mức tốt (nước 20–25°C) → cá ăn tốt (cộng nhẹ).
+- Dao động lên xuống liên tục: giảm ăn dần, càng thay đổi lớn càng giảm mạnh.
 - Ổn định (dưới 1 độ trong 5 ngày): tốt.
 
 ## Đổi hướng gió đột ngột
@@ -28,6 +29,7 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Mưa nhẹ hoặc mưa rào + trời mát: ăn tốt.
 - Mưa nhẹ hoặc mưa rào + trời nóng: trung bình.
 - Mưa to / mưa kéo dài: ăn kém.
+- Mưa 2–4h rồi nắng to + gió yếu/lặng (≤5 km/h): cá ăn rất yếu (trừ mạnh). Phải xem mưa trong lịch sử 5 giờ, không chỉ mưa lúc này: mưa xong trời quang nắng gắt mà gió yếu thì mặt nước nóng nhanh, không có gió trộn nước nên oxy giảm, cá stress.
 
 ## Giờ trong ngày + mây/nắng
 - Đỉnh ăn: 8h sáng và 5h chiều.
@@ -41,7 +43,8 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Chênh duy trì quanh mốc tốt nhiều ngày thì ăn đều.
 
 ## Giao mùa / lạnh về
-- Giao mùa: ăn chậm.
+- Giao mùa: nhiệt độ không khí thay đổi đã giảm điểm rồi, nhiệt độ nước thay đổi cũng giảm điểm rồi, nên AI chỉ tính thêm xem giảm thêm nhiều hay tí thôi: đo độ biến động nhiệt không khí 5 ngày (trung bình ngày (cao+thấp)/2, ngày cao nhất trừ ngày thấp nhất + các bước nhảy ngày–ngày). Yếu tố chưa phản ánh hết → trừ thêm nhiều; yếu tố đã trừ nhiều rồi → chỉ trừ thêm tí. Chỉ trừ thêm, không cộng lại điểm. Nội suy liên tục. Chuẩn là tổng điểm phải khớp thực tế: biến động lớn mà thực tế cá ăn ít (vd giảm 10°C) nhưng tổng điểm vẫn cao do các chỉ số khác đẹp thì trừ giao mùa nặng hơn cho đủ.
+- Số ngày ảnh hưởng về sau cũng nội suy theo độ biến động: biến động càng mạnh thì càng nhiều ngày sau vẫn bị ảnh hưởng; biến động nhỏ thì hết nhanh sau khi ổn định lại. Mức trừ giảm dần theo từng ngày sau, không biến mất đột ngột.
 - Ổn định nhiều ngày: cá quen nhịp, ăn đều.
 - Hôm sau lạnh về: không ăn. Ngày trước lạnh về: ăn mạnh (tranh ăn trước front).
 - Nóng hôm qua rồi mát + có gió hôm nay: ăn tốt. Nóng hôm qua rồi âm u + gió to: ăn kém.
