@@ -1,5 +1,7 @@
 # Chỉ số phụ — quy luật định tính (AI tự tính điểm theo ngữ cảnh, KHÔNG có mốc điểm cố định)
 
+LƯU Ý BẮT BUỘC CHO AI: Với mỗi quy luật dưới đây, phải TÍNH giá trị kích hoạt từ dữ liệu trước khi quyết định có áp dụng hay không. Không đoán, không bỏ qua quy luật nào. Vd: quy luật áp suất thì phải tính chênh lệch áp suất 5 giờ (giờ cuối trừ giờ đầu trong lịch sử 5 giờ); quy luật giờ thì phải xem giờ địa phương hiện tại; quy luật mưa thì phải xem mưa + nhiệt độ lúc này. Chỉ áp dụng quy luật sau khi đã tính xong giá trị kích hoạt.
+
 Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 
 ## Áp suất
