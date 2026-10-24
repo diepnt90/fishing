@@ -415,16 +415,15 @@ function renderResult(data, c, moon) {
   setVerdict(data.title, data.sub, data.score);
   saveRecent(state.name, data.score, data.title);
   const box = $("#chips"); box.innerHTML = "";
-  // chênh nhiệt ngày-đêm (luôn hiện để kiểm tra)
+  // chênh nhiệt ngày-đêm (luôn hiện để kiểm tra; điểm trừ thật nằm ở chip điều chỉnh)
   if (data.dayNightDiff != null) {
     const d = document.createElement("div");
-    const bad = data.dayNightDiff > 8;
-    d.className = "chip " + (bad ? "bad" : "good");
+    d.className = "chip";
     d.style.gridColumn = "1 / -1";
     const label = LANG === "vi" ? "Chênh ngày–đêm" : "Day–night diff";
-    const note = bad
-      ? (LANG === "vi" ? "vượt 8°C → trừ 25đ" : "over 8°C → −25 pts")
-      : (LANG === "vi" ? "trong ngưỡng tốt" : "within good range");
+    const note = data.dayNightDiff > 5
+      ? (LANG === "vi" ? "lớn hơn mốc tốt 5°C" : "above good anchor 5°C")
+      : (LANG === "vi" ? "quanh/dưới mốc tốt 5°C" : "at/below good anchor 5°C");
     d.innerHTML = `<div class="k">${label}</div><div class="v">${data.dayNightDiff}°C</div><div class="d">${note}</div>`;
     box.appendChild(d);
   }
