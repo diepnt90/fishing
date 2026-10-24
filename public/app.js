@@ -294,7 +294,7 @@ async function predict() {
       try {
         const r = await fetch("/api/predict", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(60000), body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(100000), body: JSON.stringify(payload),
         });
         if (r.ok) {
           const j = await r.json();
@@ -577,7 +577,7 @@ function startScanScore() {
     num.textContent = "–"; arc.style.strokeDashoffset = len; return;
   }
   // đếm mượt ease-out: nhanh lúc đầu, chậm dần, tiệm cận ~98 khi hết ~55s chờ
-  const t0 = performance.now(), DUR = 55000, TARGET = 98;
+  const t0 = performance.now(), DUR = 95000, TARGET = 98;
   function frame(t) {
     const el = Math.min(1, (t - t0) / DUR);
     const eased = 1 - Math.pow(1 - el, 3); // ease-out cubic: nhanh -> chậm
