@@ -32,12 +32,13 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 ## Giờ trong ngày + mây/nắng
 - Đỉnh ăn: 8h sáng và 5h chiều.
 - Càng về trưa càng ăn kém (đáy 12-13h).
-- Đêm ăn kém dần: 19-21h kém, 21-0h kém hơn, 0-4h kém nhất, 4-5h nới dần.
+- Đêm ăn kém dần theo giờ, nội suy liên tục: từ 19h phạt tăng dần, sâu nhất khoảng 0–4h, rồi nới dần về sáng (4–5h). Giờ kề nhau chỉ lệch nhẹ, cấm nhảy giữa các khung giờ.
 - Mây (âm u): ăn tốt. Nắng gắt: ăn kém.
 
 ## Chênh ngày-đêm
-- Chênh trên 8°C: cá gần như không ăn.
-- Chênh dưới 8°C duy trì 3 ngày trở lên: ăn mạnh.
+- Mốc tốt là 5°C: quanh 5°C cá ăn tốt, chênh nhỏ hơn 5°C (thời tiết ổn định) cũng tốt.
+- Chênh càng lớn càng xấu dần theo nội suy liên tục, không nhảy mốc: 6°C chỉ hơi kém hơn 5°C, 7°C kém hơn nữa, 8–9°C xấu dần, trên 10°C rất xấu. Cấm kiểu 8°C còn được mà 9°C đột ngột gần như không ăn.
+- Chênh duy trì quanh mốc tốt nhiều ngày thì ăn đều.
 
 ## Giao mùa / lạnh về
 - Giao mùa: ăn chậm.
