@@ -135,9 +135,11 @@ function fmtHistory(h, lang = "vi") {
   const hh = (h.hours || []).map((x) =>
     en ? `${x.time}: ${x.temp}°C, ${x.pressure} hPa, wind ${x.wind} km/h (${dirName(x.windDir)}), cloud ${x.cloud}%, rain ${x.precip} mm`
        : `${x.time}: ${x.temp}°C, ${x.pressure} hPa, gió ${x.wind} km/h (${dirName(x.windDir)}), mây ${x.cloud}%, mưa ${x.precip} mm`).join(" | ");
-  const dd = (h.days || []).map((x) =>
-    en ? `${x.label}: high ${x.tmax}°C/low ${x.tmin}°C, rain ${x.precip} mm, ${wmoName(x.wmoCode)}`
-       : `${x.label}: cao ${x.tmax}°C/thấp ${x.tmin}°C, mưa ${x.precip} mm, ${wmoName(x.wmoCode)}`).join(" | ");
+  const dd = (h.days || []).map((x) => {
+    const p = x.pressure != null ? (en ? `, pressure ${x.pressure} hPa` : `, áp suất ${x.pressure} hPa`) : "";
+    return en ? `${x.label}: high ${x.tmax}°C/low ${x.tmin}°C${p}, rain ${x.precip} mm, ${wmoName(x.wmoCode)}`
+              : `${x.label}: cao ${x.tmax}°C/thấp ${x.tmin}°C${p}, mưa ${x.precip} mm, ${wmoName(x.wmoCode)}`;
+  }).join(" | ");
   return en ? `Last 5 hours: ${hh} \nLast 5 days: ${dd}` : `5 giờ gần nhất: ${hh} \n5 ngày qua: ${dd}`;
 }
 function fmtMoon(moon = {}, lang = "vi") {
@@ -203,6 +205,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "For each rule, judge: does it apply to the current situation? How strong is the effect?",
     "Before deciding adjustments, you MUST calculate and state the following values from the data (no guessing, skip nothing):",
     "- 5-hour pressure change = last hour pressure − first hour pressure in the 5-hour history (eg: 1010 − 1012 = −2 hPa).",
+    "- 5-day pressure stability = range and day-to-day jumps of daily mean pressure over the last 5 days (stable or not).",
     "- 5-day water temp trend (up/down by how many degrees, sudden or slight, from average toward good or not).",
     "- Did wind direction shift suddenly (90° or more) in the last 5 hours, and how many hours ago.",
     "- Current rain (light/shower/heavy/prolonged) + current temperature (cool or hot).",
@@ -294,6 +297,7 @@ function buildPrompt(lang, { skill, weather, moon, history, lat, lon, crossCheck
     "Với mỗi quy luật, tự đánh giá: quy luật này có áp dụng trong tình huống hiện tại không? Mức độ ảnh hưởng mạnh hay yếu?",
     "Trước khi quyết định điều chỉnh, BẮT BUỘC tính và nêu rõ các giá trị sau từ dữ liệu (không đoán, không bỏ qua mục nào):",
     "- Chênh lệch áp suất 5 giờ = áp suất giờ cuối − áp suất giờ đầu trong lịch sử 5 giờ (vd: 1010 − 1012 = −2 hPa).",
+    "- Ổn định áp suất 5 ngày = biên độ và nhảy ngày-ngày của áp suất trung bình ngày trong 5 ngày qua (ổn định hay không).",
     "- Xu hướng nhiệt nước 5 ngày (tăng/giảm bao nhiêu độ, đột ngột hay nhẹ, từ mức trung bình về mức tốt hay không).",
     "- Hướng gió có đổi đột ngột (từ 90° trở lên) trong 5 giờ qua không, và đổi cách đây mấy giờ.",
     "- Mưa hiện tại (nhẹ/rào/to/kéo dài) + nhiệt độ lúc này (mát hay nóng).",

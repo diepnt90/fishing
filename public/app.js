@@ -285,7 +285,7 @@ async function predict() {
       `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}` +
       `&current=temperature_2m,relative_humidity_2m,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,weather_code,precipitation,is_day` +
       `&hourly=temperature_2m,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,precipitation` +
-      `&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code` +
+      `&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,pressure_msl_mean` +
       `&timezone=auto&forecast_days=1&past_days=5`
     );
     wx = await r.json();
@@ -531,6 +531,7 @@ function historyData(wx) {
       label: `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`,
       tmax: Math.round(wx.daily.temperature_2m_max[i]),
       tmin: Math.round(wx.daily.temperature_2m_min[i]),
+      pressure: wx.daily.pressure_msl_mean ? Math.round(wx.daily.pressure_msl_mean[i]) : null,
       precip: +wx.daily.precipitation_sum[i].toFixed(1),
       wmoCode: wx.daily.weather_code[i],
     });
