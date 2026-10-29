@@ -51,8 +51,8 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Nóng hôm qua rồi mát + có gió hôm nay: ăn tốt. Nóng hôm qua rồi âm u + gió to: ăn kém.
 
 ## Thiếu oxy / cá ăn lửng
-- Nóng từ 30°C trở lên + gió dưới 5 km/h: thiếu oxy, cá nổi lên vì ngạt.
-- Gió trên 5 km/h đã hỗ trợ oxy tốt.
+- CHỈ khi nóng từ 30°C trở lên VÀ gió ≤5 km/h mới trừ thiếu oxy: cá nổi lên vì ngạt.
+- Gió >5 km/h thì KHÔNG được trừ khoản thiếu oxy, dù trời nóng — gió đã hỗ trợ oxy tốt, và gió yếu đã tính trong yếu tố gió. Cấm nới ngưỡng kiểu "gần mức yếu".
 - Chỉ quan tâm cá ăn đáy — cá đi lửng nghĩa là cá đang ăn chậm (tín hiệu xấu), không phải tín hiệu tốt.
 
 ## Nguyên tắc tính điểm chỉ số phụ (quan trọng)
@@ -60,3 +60,4 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Nền càng cao, cú trừ càng đau (nền 70 + yếu tố làm bỏ ăn thì trừ mạnh để điểm cuối xuống thấp, thể hiện cá đã ngừng ăn; cùng yếu tố đó trên nền 50 thì trừ nhẹ).
 - Điểm cuối phải phản ánh đúng thực tế cá có ăn hay không, không phải cộng trừ máy móc.
 - Nội suy bắt buộc, cấm nhảy ngưỡng: mức điều chỉnh thay đổi liên tục theo giá trị kích hoạt; chênh lệch nhỏ ở giá trị kích hoạt chỉ được gây chênh lệch nhỏ ở điểm (tối đa 2–3đ cho mỗi 1 hPa / 1°C / 0.5°C chênh lệch).
+- Cấm trừ trùng: mỗi khoản điều chỉnh phải là thông tin MỚI, chưa nằm trong 6 yếu tố. Nhiệt độ không khí lệch khỏi đỉnh đã tính trong yếu tố không khí thì không trừ thêm khoản "nóng"; gió yếu đã tính trong yếu tố gió thì không trừ thêm khoản "gió yếu". Chỉ trừ thêm cho hiệu ứng mà 6 yếu tố chưa phản ánh (vd: thay đổi áp suất khác với mức áp suất tuyệt đối; chênh ngày-đêm; giờ trong ngày; chuỗi mưa → nắng).
