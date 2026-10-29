@@ -415,18 +415,6 @@ function renderResult(data, c, moon) {
   setVerdict(data.title, data.sub, data.score);
   saveRecent(state.name, data.score, data.title);
   const box = $("#chips"); box.innerHTML = "";
-  // chênh nhiệt ngày-đêm (luôn hiện để kiểm tra; điểm trừ thật nằm ở chip điều chỉnh)
-  if (data.dayNightDiff != null) {
-    const d = document.createElement("div");
-    d.className = "chip";
-    d.style.gridColumn = "1 / -1";
-    const label = LANG === "vi" ? "Chênh ngày–đêm" : "Day–night diff";
-    const note = data.dayNightDiff > 5
-      ? (LANG === "vi" ? "lớn hơn mốc tốt 5°C" : "above good anchor 5°C")
-      : (LANG === "vi" ? "quanh/dưới mốc tốt 5°C" : "at/below good anchor 5°C");
-    d.innerHTML = `<div class="k">${label}</div><div class="v">${data.dayNightDiff}°C</div><div class="d">${note}</div>`;
-    box.appendChild(d);
-  }
   // 6 yếu tố chấm điểm (kèm số điểm)
   (data.factors || []).forEach((f) => {
     const d = document.createElement("div");

@@ -10,6 +10,7 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Ổn định (dưới ±1,5 hPa): tốt, cộng 5 điểm.
 - Giảm chậm 1,5-5 hPa: ăn mạnh nhất, mức cộng cao hơn khoản ổn định 5h.
 - Giảm nhanh 5-10 hPa: ăn kém dần, cá chọn lọc.
+- Mốc 5 hPa chỉ là ranh giới phân band, mức điều chỉnh phải LIÊN TỤC qua mốc: giảm 4.9 hPa vẫn là giảm chậm (ăn mạnh, cộng điểm); vừa qua 5 hPa chỉ xấu nhẹ rồi xấu dần theo mức giảm. CẤM lật từ cộng mạnh sang trừ mạnh chỉ vì vượt mốc.
 - Giảm rất nhanh (trên 10 hPa): gần như không ăn.
 - Tăng chậm 1,5-3 hPa: ăn khá.
 - Tăng nhanh (trên 5 hPa): ăn yếu.
