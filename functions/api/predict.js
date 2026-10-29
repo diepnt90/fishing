@@ -11,7 +11,7 @@
  */
 
 const CACHE_ENABLED = true; // dedup job theo lưới+khung giờ (~1h); false: testing, mỗi request 1 job mới
-const LLM_MODEL = "gpt-5-mini";
+const LLM_MODEL = "gpt-4.1-mini";
 
 /* chuỗi dùng chung, song ngữ */
 const T = {
@@ -357,7 +357,6 @@ async function llmPredict(env, origin, { weather, moon, history, lat, lon, cross
     signal: AbortSignal.timeout(90000),
     body: JSON.stringify({
       model: LLM_MODEL,
-      reasoning_effort: "medium",
       response_format: { type: "json_object" },
       messages: [{ role: "user", content: prompt }],
     }),
