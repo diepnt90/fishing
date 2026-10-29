@@ -4,6 +4,8 @@ LƯU Ý BẮT BUỘC CHO AI: Với mỗi quy luật dưới đây, phải TÍNH 
 
 Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 
+Mùa: miền Bắc (vĩ độ ≥17) nóng tháng 4–10, lạnh tháng 11–3; miền Nam (vĩ độ <17) nóng quanh năm. Các luật ghi "mùa nóng/mùa lạnh" dùng định nghĩa này.
+
 ## Áp suất
 - Mùa hè áp suất thường dao động quanh 1000-1010 hPa, mùa đông 1015-1030 hPa. So với mức bình thường của mùa, không so tuyệt đối.
 - Áp suất cao thấp không quan trọng bằng tốc độ thay đổi. Bảng thay đổi áp suất / 5 giờ:
@@ -20,7 +22,7 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 ## Xu hướng nhiệt độ nước (5 ngày)
 - Tăng/giảm đột ngột → cá ăn yếu (trừ; càng đột ngột càng trừ nhiều, nội suy liên tục). Đột ngột thì trừ dù chiều thay đổi có về phía thoải mái hay không — sốc lớn lấn át hướng tốt.
 - Tăng/giảm nhẹ → bình thường (không trừ).
-- Tăng/giảm nhẹ từ mức trung bình về mức tốt (nước 20–25°C) → cá ăn tốt (cộng nhẹ).
+- Tăng/giảm nhẹ từ mức trung bình về mức tốt (nước quanh đỉnh theo mùa: mùa nóng ~28°C, mùa lạnh ~26°C) → cá ăn tốt (cộng nhẹ).
 - Dao động lên xuống liên tục: giảm ăn dần, càng thay đổi lớn càng giảm mạnh.
 - Ổn định (dưới 1 độ trong 5 ngày): tốt.
 
@@ -34,14 +36,14 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Chuỗi mưa → nắng → lặng gió: đánh giá theo MỨC ĐỘ LIÊN TỤC, không gán mức trừ cố định và không dùng ngưỡng lượng mưa cứng làm điểm nhảy. Mưa phùn/mưa li ti (như tổng 0,8 mm trong 5 giờ) không đủ gây hiệu ứng này, KHÔNG trừ vì chuỗi mưa→nắng. Mưa vừa kéo dài rồi nắng vừa có thể ảnh hưởng nhẹ nếu đủ bằng chứng; mưa càng lớn, càng kéo dài, sau đó nắng càng gắt, trời càng nóng và gió càng yếu/lặng thì nguy cơ nước mặt nóng nhanh, thiếu trộn oxy càng cao và điểm trừ càng lớn. Tính từ lượng mưa từng giờ, thời lượng, cường độ nắng/nhiệt và gió hiện tại; nội suy mượt theo mức độ, không tự giả định có nắng gắt khi thiếu dữ liệu. Nếu không đủ dữ liệu hoặc không có hiệu ứng đáng kể, bỏ qua khoản phạt này.
 
 ## Giờ trong ngày + mây/nắng
-- Đỉnh ăn: 8h sáng và 5h chiều.
+- Mùa nóng: đỉnh ăn ~7h sáng và 17h30 chiều; mùa lạnh: đỉnh ăn ~8h sáng và 16h30 chiều.
 - Càng về trưa càng ăn kém (đáy 12-13h).
 - Đêm ăn kém dần theo giờ, nội suy liên tục: từ 19h phạt tăng dần, sâu nhất khoảng 0–4h, rồi nới dần về sáng (4–5h). Giờ kề nhau chỉ lệch nhẹ, cấm nhảy giữa các khung giờ.
 - Mây (âm u): ăn tốt. Nắng gắt: ăn kém.
 
 ## Chênh ngày-đêm
-- Mốc tốt là 5°C: quanh 5°C cá ăn tốt, chênh nhỏ hơn 5°C (thời tiết ổn định) cũng tốt.
-- Chênh càng lớn càng xấu dần theo nội suy liên tục, không nhảy mốc: 6°C chỉ hơi kém hơn 5°C, 7°C kém hơn nữa, 8–9°C xấu dần, trên 10°C rất xấu. Cấm kiểu 8°C còn được mà 9°C đột ngột gần như không ăn.
+- Mốc tốt là 8°C (chênh bình thường ở Việt Nam đã 6–10°C): quanh 8°C cá ăn tốt, chênh nhỏ hơn 8°C (thời tiết ổn định) cũng tốt.
+- Chênh càng lớn càng xấu dần theo nội suy liên tục, không nhảy mốc: 8–12°C xấu dần, trên 12°C rất xấu. Cấm kiểu vừa qua một mốc là đổi hẳn mức điểm.
 - Chênh duy trì quanh mốc tốt nhiều ngày thì ăn đều.
 
 ## Giao mùa / lạnh về
@@ -52,8 +54,8 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Nóng hôm qua rồi mát + có gió hôm nay: ăn tốt. Nóng hôm qua rồi âm u + gió to: ăn kém.
 
 ## Thiếu oxy / cá ăn lửng
-- CHỈ khi nóng từ 30°C trở lên VÀ gió ≤5 km/h mới trừ thiếu oxy: cá nổi lên vì ngạt.
-- Gió >5 km/h thì KHÔNG được trừ khoản thiếu oxy, dù trời nóng — gió đã hỗ trợ oxy tốt, và gió yếu đã tính trong yếu tố gió. Cấm nới ngưỡng kiểu "gần mức yếu".
+- Thiếu oxy là hiệu ứng CỘNG HƯỞNG của nước nóng + gió lặng: nước nóng đã trừ trong yếu tố nước, gió lặng đã trừ trong yếu tố gió, nên khoản thiếu oxy chỉ trừ THÊM MỘT CHÚT cho combo, không phải một khoản phạt lớn riêng.
+- Mức trừ thêm nội suy liên tục theo cả hai: nước càng nóng + gió càng lặng thì trừ càng nhiều; nước hơi nóng + gió hơi lặng thì trừ rất ít. Không dùng ngưỡng cứng (không có chuyện vừa qua một mức gió hay nhiệt là hết/không hết thiếu oxy).
 - Chỉ quan tâm cá ăn đáy — cá đi lửng nghĩa là cá đang ăn chậm (tín hiệu xấu), không phải tín hiệu tốt.
 
 ## Nguyên tắc tính điểm chỉ số phụ (quan trọng)
@@ -62,3 +64,4 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Điểm cuối phải phản ánh đúng thực tế cá có ăn hay không, không phải cộng trừ máy móc.
 - Nội suy bắt buộc, cấm nhảy ngưỡng: mức điều chỉnh thay đổi liên tục theo giá trị kích hoạt; chênh lệch nhỏ ở giá trị kích hoạt chỉ được gây chênh lệch nhỏ ở điểm (tối đa 2–3đ cho mỗi 1 hPa / 1°C / 0.5°C chênh lệch).
 - Cấm trừ trùng: mỗi khoản điều chỉnh phải là thông tin MỚI, chưa nằm trong 6 yếu tố. Nhiệt độ không khí lệch khỏi đỉnh đã tính trong yếu tố không khí thì không trừ thêm khoản "nóng"; gió yếu đã tính trong yếu tố gió thì không trừ thêm khoản "gió yếu". Chỉ trừ thêm cho hiệu ứng mà 6 yếu tố chưa phản ánh (vd: thay đổi áp suất khác với mức áp suất tuyệt đối; chênh ngày-đêm; giờ trong ngày; chuỗi mưa → nắng).
+- Ngoại lệ duy nhất của cấm trừ trùng: hiệu ứng cộng hưởng (vd thiếu oxy = nước nóng + gió lặng kết hợp) được trừ thêm một chút, vì tương tác này chưa nằm trong riêng yếu tố nào.
