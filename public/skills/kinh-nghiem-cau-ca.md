@@ -56,6 +56,7 @@ Mùa: miền Bắc (vĩ độ ≥17) nóng tháng 4–10, lạnh tháng 11–3; 
 ## Thiếu oxy / cá ăn lửng
 - Thiếu oxy là hiệu ứng CỘNG HƯỞNG của nước nóng + gió lặng: nước nóng đã trừ trong yếu tố nước, gió lặng đã trừ trong yếu tố gió, nên khoản thiếu oxy chỉ trừ THÊM MỘT CHÚT cho combo, không phải một khoản phạt lớn riêng.
 - Mức trừ thêm nội suy liên tục theo cả hai: nước càng nóng + gió càng lặng thì trừ càng nhiều; nước hơi nóng + gió hơi lặng thì trừ rất ít. Không dùng ngưỡng cứng (không có chuyện vừa qua một mức gió hay nhiệt là hết/không hết thiếu oxy).
+- Thế nào là nóng/lặng (tính theo đỉnh mùa và thang gió): nước chỉ tính là nóng khi trên đỉnh theo mùa (mùa nóng >28°C, mùa lạnh >26°C) — nước ở dưới hoặc bằng đỉnh nằm trong vùng tốt, đóng góp 0 cho combo; vừa trên đỉnh chỉ là hơi nóng. Gió chỉ tính là lặng khi dưới 5 km/h; 5–8 km/h chỉ là hơi lặng; từ 8 km/h trở lên không phải lặng (nằm trong vùng tốt 5–15). Khoản trừ thêm cần cả hai phía cùng đóng góp — một phía bằng 0 thì khoản trừ thêm bằng 0.
 - Chỉ quan tâm cá ăn đáy — cá đi lửng nghĩa là cá đang ăn chậm (tín hiệu xấu), không phải tín hiệu tốt.
 
 ## Nguyên tắc tính điểm chỉ số phụ (quan trọng)
