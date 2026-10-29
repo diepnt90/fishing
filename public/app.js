@@ -502,8 +502,8 @@ function setVerdict(title, sub, score) {
     if (cut) moreBtn.textContent = t("verdictMore");
   });
   const el = $("#verdict-title");
-  el.style.color = score == null ? "var(--ink)" : score >= 90 ? "#22d3ee" : score >= 75 ? "var(--glow)" : score >= 65 ? "#4ade80" : score >= 55 ? "var(--lime)" : score >= 45 ? "#ffcf3f" : score >= 30 ? "var(--amber)" : score >= 10 ? "var(--coral)" : "#ff5252";
-  el.style.textShadow = `0 0 34px ${score == null ? "transparent" : score >= 90 ? "rgba(34,211,238,.55)" : score >= 75 ? "rgba(62,230,196,.55)" : score >= 65 ? "rgba(74,222,128,.5)" : score >= 55 ? "rgba(163,230,53,.45)" : score >= 45 ? "rgba(255,207,63,.45)" : score >= 30 ? "rgba(245,185,66,.45)" : score >= 10 ? "rgba(255,107,107,.45)" : "rgba(255,82,82,.5)"}`;
+  el.style.color = score == null ? "" : scoreColor(score);
+  el.style.textShadow = "none";
 }
 
 /* ---------- lịch sử: 5 giờ gần nhất + 5 ngày qua ---------- */
@@ -621,7 +621,7 @@ function startScanScore() {
     arc.style.strokeDashoffset = len * (1 - v / 100);
     const pulse = Math.abs(Math.sin(t / 600)); // sáng nhẹ lên xuống trong lúc chờ
     arc.style.opacity = (0.55 + 0.45 * pulse).toFixed(2);
-    arc.style.filter = "drop-shadow(0 0 " + Math.round(4 + 8 * pulse) + "px rgba(62,230,196,.75))";
+    arc.style.filter = "drop-shadow(0 0 " + Math.round(4 + 8 * pulse) + "px rgba(2,132,199,.5))";
     state.scanId = requestAnimationFrame(frame);
   }
   state.scanId = requestAnimationFrame(frame);
@@ -630,7 +630,7 @@ function startScanScore() {
 /* ---------- đàn cá canvas ----------
    Điểm cao → đông cá, bơi nhanh, sáng rực. Điểm thấp → lèo tèo vài con, bơi chậm, mờ.
    Tầng ăn (depthAvg 0=mặt → 2=đáy) → đàn cá tụ về đúng tầng đó, di cư mượt mà. */
-function scoreColor(s) { return s >= 90 ? "#22d3ee" : s >= 75 ? "#3ee6c4" : s >= 65 ? "#4ade80" : s >= 55 ? "#a3e635" : s >= 45 ? "#ffcf3f" : s >= 30 ? "#f5b942" : s >= 10 ? "#ff6b6b" : "#ff5252"; }
+function scoreColor(s) { return s >= 90 ? "#0284C7" : s >= 75 ? "#0891B2" : s >= 65 ? "#16A34A" : s >= 55 ? "#65A30D" : s >= 45 ? "#CA8A04" : s >= 30 ? "#D97706" : s >= 10 ? "#EF4444" : "#DC2626"; }
 function stopSea() { if (state.animId) cancelAnimationFrame(state.animId); state.animId = null; }
 
 /* ---------- sonar máy dò cá: chạy trong lúc chờ AI ---------- */
@@ -643,7 +643,7 @@ function startSonar() {
   const cx = W / 2, cy = H * 0.52, maxR = Math.hypot(W, H) / 2;
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
     ctx.beginPath(); ctx.arc(cx, cy, maxR * 0.45, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(62,230,196,.25)"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = "rgba(2,132,199,.30)"; ctx.lineWidth = 2; ctx.stroke();
     return;
   }
   const rings = [{ r: 0 }];
@@ -662,23 +662,23 @@ function startSonar() {
       const k = rg.r / maxR;
       if (k >= 1) { rings.splice(i, 1); continue; }
       ctx.beginPath(); ctx.arc(cx, cy, rg.r, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(62,230,196," + (0.45 * (1 - k)).toFixed(3) + ")";
-      ctx.lineWidth = 2; ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 10;
+      ctx.strokeStyle = "rgba(2,132,199," + (0.45 * (1 - k)).toFixed(3) + ")";
+      ctx.lineWidth = 2; ctx.shadowColor = "#0284C7"; ctx.shadowBlur = 10;
       ctx.stroke(); ctx.shadowBlur = 0;
     }
     // tia quét xoay
     const sw = (t / 1400) % (Math.PI * 2);
     if (ctx.createConicGradient) {
       const g = ctx.createConicGradient(sw - 0.6, cx, cy);
-      g.addColorStop(0, "rgba(62,230,196,0)");
-      g.addColorStop(0.09, "rgba(62,230,196,.22)");
-      g.addColorStop(0.1, "rgba(62,230,196,0)");
-      g.addColorStop(1, "rgba(62,230,196,0)");
+      g.addColorStop(0, "rgba(2,132,199,0)");
+      g.addColorStop(0.09, "rgba(2,132,199,.22)");
+      g.addColorStop(0.1, "rgba(2,132,199,0)");
+      g.addColorStop(1, "rgba(2,132,199,0)");
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, maxR, 0, Math.PI * 2); ctx.closePath(); ctx.fill();
     } else {
-      ctx.save(); ctx.strokeStyle = "rgba(62,230,196,.5)"; ctx.lineWidth = 2;
-      ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 12;
+      ctx.save(); ctx.strokeStyle = "rgba(2,132,199,.5)"; ctx.lineWidth = 2;
+      ctx.shadowColor = "#0284C7"; ctx.shadowBlur = 12;
       ctx.beginPath(); ctx.moveTo(cx, cy);
       ctx.lineTo(cx + Math.cos(sw) * maxR, cy + Math.sin(sw) * maxR); ctx.stroke(); ctx.restore();
     }
@@ -690,7 +690,7 @@ function startSonar() {
       b.glow *= 0.965;
       ctx.save();
       ctx.globalAlpha = 0.22 + b.glow * 0.78;
-      ctx.fillStyle = "#3ee6c4"; ctx.shadowColor = "#3ee6c4"; ctx.shadowBlur = 4 + b.glow * 16;
+      ctx.fillStyle = "#0284C7"; ctx.shadowColor = "#0284C7"; ctx.shadowBlur = 4 + b.glow * 16;
       ctx.beginPath(); ctx.ellipse(b.x, b.y, b.s, b.s * 0.42, 0, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     });
@@ -754,7 +754,7 @@ function startSea(score, depthAvg = 1) {
     ctx.lineTo(-f.s * 1.5, -f.s * 0.4 + flap);
     ctx.lineTo(-f.s * 1.5, f.s * 0.4 + flap);
     ctx.closePath(); ctx.fill();
-    ctx.shadowBlur = 0; ctx.globalAlpha = 1; ctx.fillStyle = "#04121f";
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1; ctx.fillStyle = "#0F172A";
     ctx.beginPath(); ctx.arc(f.s * 0.55, -f.s * 0.1, f.s * 0.11, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
@@ -763,10 +763,10 @@ function startSea(score, depthAvg = 1) {
     ctx.clearRect(0, 0, W, H);
     plankton.forEach((p) => {
       ctx.globalAlpha = 0.25 + 0.2 * Math.sin(t / 700 + p.tw);
-      ctx.fillStyle = "#9fd8cf"; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#38BDF8"; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
     });
     ctx.globalAlpha = 1;
-    ctx.strokeStyle = "rgba(159,216,207,.35)"; ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(2,132,199,.35)"; ctx.lineWidth = 1;
     bubbles.forEach((b) => {
       b.y -= b.v; if (b.y < -6) { b.y = H + 6; b.x = Math.random() * W; }
       ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
