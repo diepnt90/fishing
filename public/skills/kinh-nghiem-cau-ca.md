@@ -30,7 +30,7 @@ Phạm vi: 5 loài cá tầng đáy (chép, trôi, trắm, rô phi, diếc).
 - Mưa nhẹ hoặc mưa rào + trời mát: ăn tốt.
 - Mưa nhẹ hoặc mưa rào + trời nóng: trung bình.
 - Mưa to / mưa kéo dài: ăn kém.
-- Mưa 2–4h rồi nắng to + gió yếu/lặng (≤5 km/h): cá ăn rất yếu (trừ mạnh). Phải xem mưa trong lịch sử 5 giờ, không chỉ mưa lúc này: mưa xong trời quang nắng gắt mà gió yếu thì mặt nước nóng nhanh, không có gió trộn nước nên oxy giảm, cá stress.
+- CHỈ áp dụng phạt mạnh cho chuỗi MƯA TO KÉO DÀI → NẮNG GẮT → LẶNG GIÓ: trong lịch sử 5 giờ phải có mưa to thực sự (tham chiếu lượng mưa ≥5 mm/giờ trong ít nhất 2 giờ liên tiếp, không phải tổng lượng mưa 5 giờ), sau đó trời quang nắng gắt và gió hiện tại ≤5 km/h. Khi đó nước mặt có thể nóng nhanh, giảm trộn oxy và cá stress; mức trừ phải cân theo mức mưa, nhiệt độ và nắng thực tế. Mưa phùn/mưa nhỏ li ti (ví dụ tổng 0,8 mm trong 5 giờ) KHÔNG kích hoạt quy luật này và KHÔNG được trừ điểm vì chuỗi mưa→nắng→lặng gió. Nếu dữ liệu không đủ để xác nhận mưa to kéo dài, không áp dụng phạt này.
 
 ## Giờ trong ngày + mây/nắng
 - Đỉnh ăn: 8h sáng và 5h chiều.
